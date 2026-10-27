@@ -62,11 +62,11 @@ final class QueueDiagnostics
      */
     private function queueStatus(bool $schedulerAvailable, int $overdueRetries, array $summary): string
     {
-        if (! $schedulerAvailable || $overdueRetries > 0) {
+        if ( ! $schedulerAvailable || $overdueRetries > 0) {
             return 'attention';
         }
 
-        if ((int) $summary['queued_count'] === 0 && (int) $summary['retry_scheduled_count'] === 0 && (int) $summary['retrying_count'] === 0) {
+        if ( (int) $summary['queued_count'] === 0 && (int) $summary['retry_scheduled_count'] === 0 && (int) $summary['retrying_count'] === 0) {
             return 'empty';
         }
 
@@ -81,7 +81,7 @@ final class QueueDiagnostics
     {
         $actions = [];
 
-        if (! $schedulerAvailable) {
+        if ( ! $schedulerAvailable) {
             $actions[] = __('Load or repair Action Scheduler so Aculect Mail can enqueue background retries.', 'onesmtp');
         }
 
@@ -89,7 +89,7 @@ final class QueueDiagnostics
             $actions[] = __('Confirm WP-Cron or the Action Scheduler runner is processing jobs, then review recent message logs for safe resend decisions.', 'onesmtp');
         }
 
-        if ($actions === [] && ((int) $summary['queued_count'] > 0 || (int) $summary['retry_scheduled_count'] > 0 || (int) $summary['retrying_count'] > 0)) {
+        if ($actions === [] && ( (int) $summary['queued_count'] > 0 || (int) $summary['retry_scheduled_count'] > 0 || (int) $summary['retrying_count'] > 0)) {
             $actions[] = __('Retry processing is available. Monitor the queue and only intervene if counts stop moving.', 'onesmtp');
         }
 

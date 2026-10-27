@@ -31,7 +31,7 @@ final class RateLimiter
     public function evaluate(): RateLimitDecision
     {
         $settings = $this->settings->get();
-        if (! $settings->hasAnyLimit()) {
+        if ( ! $settings->hasAnyLimit()) {
             return RateLimitDecision::allowed();
         }
 
@@ -47,7 +47,7 @@ final class RateLimiter
                 continue;
             }
 
-            $oldest = isset($stats['oldest_created_at']) ? strtotime((string) $stats['oldest_created_at']) : false;
+            $oldest = isset($stats['oldest_created_at']) ? strtotime( (string) $stats['oldest_created_at']) : false;
             $resetAt = is_int($oldest) ? $oldest + $window['seconds'] : $now + $window['seconds'];
             $retryAfter = max(1, $resetAt - $now);
 
@@ -75,7 +75,7 @@ final class RateLimiter
 
     public function acquireSendLock(): bool
     {
-        if (! $this->settings->get()->hasAnyLimit()) {
+        if ( ! $this->settings->get()->hasAnyLimit()) {
             return true;
         }
 
@@ -105,9 +105,21 @@ final class RateLimiter
     private function configuredWindows(RateLimitSettings $settings): array
     {
         $windows = [
-            ['name' => 'minute', 'seconds' => 60, 'limit' => $settings->getPerMinute()],
-            ['name' => 'hour', 'seconds' => HOUR_IN_SECONDS, 'limit' => $settings->getPerHour()],
-            ['name' => 'day', 'seconds' => DAY_IN_SECONDS, 'limit' => $settings->getPerDay()],
+            [
+				'name' => 'minute',
+				'seconds' => 60,
+				'limit' => $settings->getPerMinute(),
+			],
+            [
+				'name' => 'hour',
+				'seconds' => HOUR_IN_SECONDS,
+				'limit' => $settings->getPerHour(),
+			],
+            [
+				'name' => 'day',
+				'seconds' => DAY_IN_SECONDS,
+				'limit' => $settings->getPerDay(),
+			],
         ];
 
         return array_values(

@@ -26,8 +26,20 @@ final class DeliveryEngineTest extends TestCase
     public function test_repeated_provider_failures_switch_to_next_provider_and_log_lineage(): void
     {
         $GLOBALS['wpdb']->activeProviders = [
-            ['id' => 100, 'adapter_type' => 'missing', 'is_active' => 1, 'priority' => 1, 'weight' => 1],
-            ['id' => 200, 'adapter_type' => 'missing', 'is_active' => 1, 'priority' => 2, 'weight' => 1],
+            [
+				'id' => 100,
+				'adapter_type' => 'missing',
+				'is_active' => 1,
+				'priority' => 1,
+				'weight' => 1,
+			],
+            [
+				'id' => 200,
+				'adapter_type' => 'missing',
+				'is_active' => 1,
+				'priority' => 2,
+				'weight' => 1,
+			],
         ];
         $GLOBALS['wpdb']->providerRowsById[200] = [
             'id' => 200,
@@ -38,12 +50,21 @@ final class DeliveryEngineTest extends TestCase
             'config_json' => '{}',
         ];
         $GLOBALS['wpdb']->attemptHistoryByMessage[501] = [
-            ['provider_id' => 100, 'result' => 'fail'],
-            ['provider_id' => 100, 'result' => 'fail'],
+            [
+				'provider_id' => 100,
+				'result' => 'fail',
+			],
+            [
+				'provider_id' => 100,
+				'result' => 'fail',
+			],
         ];
 
         $engine = $this->buildEngine();
-        $outcome = $engine->deliver(501, 3, ['to' => ['qa@example.com'], 'subject' => 'failover']);
+        $outcome = $engine->deliver(501, 3, [
+			'to' => ['qa@example.com'],
+			'subject' => 'failover',
+		]);
 
         self::assertFalse($outcome->isSuccess());
         self::assertSame(200, $outcome->getProviderId());
@@ -53,7 +74,7 @@ final class DeliveryEngineTest extends TestCase
         self::assertSame(501, $event['data']['message_id']);
         self::assertSame(200, $event['data']['provider_id']);
 
-        $context = json_decode((string) $event['data']['context_json'], true);
+        $context = json_decode( (string) $event['data']['context_json'], true);
         self::assertSame(3, $context['attempt'] ?? null);
         self::assertSame(100, $context['from_provider_id'] ?? null);
         self::assertSame(200, $context['to_provider_id'] ?? null);
@@ -74,7 +95,10 @@ final class DeliveryEngineTest extends TestCase
         ];
 
         $engine = $this->buildEngine();
-        $outcome = $engine->deliver(502, 2, ['to' => ['qa@example.com'], 'subject' => 'exhausted']);
+        $outcome = $engine->deliver(502, 2, [
+			'to' => ['qa@example.com'],
+			'subject' => 'exhausted',
+		]);
 
         self::assertFalse($outcome->isSuccess());
         self::assertSame(0, $outcome->getProviderId());
@@ -84,14 +108,20 @@ final class DeliveryEngineTest extends TestCase
         self::assertNotNull($event);
         self::assertSame(502, $event['data']['message_id']);
 
-        $context = json_decode((string) $event['data']['context_json'], true);
+        $context = json_decode( (string) $event['data']['context_json'], true);
         self::assertSame('provider_pool_exhausted', $context['reason'] ?? null);
     }
 
     public function test_forced_provider_override_rejects_ineligible_provider_without_fallback(): void
     {
         $GLOBALS['wpdb']->activeProviders = [
-            ['id' => 100, 'adapter_type' => 'missing', 'is_active' => 1, 'priority' => 1, 'weight' => 1],
+            [
+				'id' => 100,
+				'adapter_type' => 'missing',
+				'is_active' => 1,
+				'priority' => 1,
+				'weight' => 1,
+			],
         ];
         $GLOBALS['wpdb']->providerRowsById[100] = [
             'id' => 100,
@@ -103,7 +133,10 @@ final class DeliveryEngineTest extends TestCase
         ];
 
         $engine = $this->buildEngine();
-        $outcome = $engine->deliver(503, 2, ['to' => ['qa@example.com'], 'subject' => 'forced'], 999);
+        $outcome = $engine->deliver(503, 2, [
+			'to' => ['qa@example.com'],
+			'subject' => 'forced',
+		], 999);
 
         self::assertFalse($outcome->isSuccess());
         self::assertSame(999, $outcome->getProviderId());

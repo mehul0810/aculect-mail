@@ -70,12 +70,12 @@ final class SettingsAdminTest extends TestCase
         self::assertStringContainsString('sender@example.test', $output);
         self::assertStringContainsString('Sender alert(1)', $output);
         self::assertStringNotContainsString('<script>', $output);
-        self::assertStringContainsString('onesmtp-settings-grid', $output);
-        self::assertStringContainsString('onesmtp-settings-panel postbox', $output);
+        self::assertStringContainsString('onesmtp-sender-layout', $output);
+        self::assertStringContainsString('onesmtp-panel', $output);
         self::assertStringContainsString('reply@example.test', $output);
         self::assertStringContainsString('audit@example.test', $output);
         self::assertStringContainsString('Save sender identity', $output);
-        self::assertStringContainsString('checked="checked"', $output);
+        self::assertStringContainsString(' checked', $output);
         self::assertStringContainsString('Failure alerts', $output);
         self::assertStringContainsString('ops@example.test', $output);
         self::assertStringContainsString('https://hooks.example.test/long-path-', $output);
@@ -149,7 +149,7 @@ final class SettingsAdminTest extends TestCase
             self::assertSame('Aculect Mail settings admin redirected.', $e->getMessage());
         }
 
-        self::assertFalse((bool) (get_option('onesmtp_settings', [])['simulation_mode']['enabled'] ?? false));
+        self::assertFalse( (bool) (get_option('onesmtp_settings', [])['simulation_mode']['enabled'] ?? false));
         self::assertStringContainsString('onesmtp_settings_status=simulation_mode_owner_conflict', (string) $GLOBALS['onesmtp_test_redirect']['location']);
     }
 
@@ -327,11 +327,12 @@ final class SettingsAdminTest extends TestCase
         $admin->render();
         $output = (string) ob_get_clean();
 
-        self::assertStringContainsString('Failure alerts are disabled', $output);
+        self::assertMatchesRegularExpression('/name="failure_alert_email_recipients"[^>]* disabled/', $output);
+        self::assertMatchesRegularExpression('/name="failure_alert_webhook_url"[^>]* disabled/', $output);
         self::assertStringContainsString('name="failure_alert_email_enabled"', $output);
         self::assertStringContainsString('name="failure_alert_webhook_enabled"', $output);
         self::assertStringContainsString('Save failure alerts', $output);
-        self::assertStringContainsString('Weekly delivery summaries are disabled', $output);
+        self::assertMatchesRegularExpression('/name="weekly_summary_email_recipients"[^>]* disabled/', $output);
         self::assertStringContainsString('name="weekly_summary_enabled"', $output);
     }
 
@@ -372,6 +373,99 @@ final class SettingsAdminTest extends TestCase
         self::assertStringContainsString('"throttle_seconds":1800', $json);
         self::assertStringNotContainsString('ops@example.test', $json);
         self::assertStringNotContainsString('hooks.example.test', $json);
+    }
+
+    public function test_guided_sender_step_preserves_other_explicit_header_settings(): void
+    {
+        update_option('onesmtp_settings', [
+			'sender_identity' => [
+				'from_email' => 'old@example.test',
+				'from_name' => 'Old name',
+				'reply_to' => ['reply@example.test'],
+				'bcc' => ['audit@example.test'],
+				'force_reply_to' => true,
+				'force_from_email' => true,
+			],
+        ], false);
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+			'onesmtp_settings_action' => 'save_sender_identity',
+			'onesmtp_settings_nonce' => 'test-nonce',
+			'onesmtp_return_tab' => 'onesmtp-overview',
+			'from_email' => 'new@example.test',
+			'from_name' => 'New name',
+		];
+        try {
+            (new SettingsAdmin())->handleRequest();
+        } catch (RuntimeException $exception) {
+            self::assertSame('Aculect Mail settings admin redirected.', $exception->getMessage());
+        }
+        $identity = get_option('onesmtp_settings')['sender_identity'];
+        self::assertSame('new@example.test', $identity['from_email']);
+        self::assertSame(['reply@example.test'], $identity['reply_to']);
+        self::assertSame(['audit@example.test'], $identity['bcc']);
+        self::assertTrue($identity['force_reply_to']);
+        self::assertTrue($identity['force_from_email']);
+    }
+
+    public function test_disabling_notification_channels_preserves_their_omitted_fields(): void
+    {
+        update_option('onesmtp_settings', [
+            'failure_alerts' => [
+				'email_enabled' => true,
+				'email_recipients' => ['ops@example.test'],
+				'webhook_enabled' => true,
+				'webhook_url' => 'https://hooks.example.test/alerts',
+				'throttle_seconds' => 900,
+			],
+            'weekly_summary' => [
+				'enabled' => true,
+				'email_recipients' => ['weekly@example.test'],
+			],
+        ], false);
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        foreach (['save_failure_alerts', 'save_weekly_summary'] as $action) {
+            $_POST = [
+				'onesmtp_settings_action' => $action,
+				'onesmtp_settings_nonce' => 'test-nonce',
+			];
+            try {
+                (new SettingsAdmin())->handleRequest();
+            } catch (RuntimeException $exception) {
+                self::assertSame('Aculect Mail settings admin redirected.', $exception->getMessage());
+            }
+        }
+        $settings = get_option('onesmtp_settings');
+        self::assertFalse($settings['failure_alerts']['email_enabled']);
+        self::assertFalse($settings['failure_alerts']['webhook_enabled']);
+        self::assertFalse($settings['weekly_summary']['enabled']);
+        self::assertSame(['ops@example.test'], $settings['failure_alerts']['email_recipients']);
+        self::assertSame('https://hooks.example.test/alerts', $settings['failure_alerts']['webhook_url']);
+        self::assertSame(['weekly@example.test'], $settings['weekly_summary']['email_recipients']);
+    }
+
+    public function test_enabled_channel_does_not_reuse_omitted_disabled_recipient_fields(): void
+    {
+        update_option('onesmtp_settings', [
+			'failure_alerts' => [
+				'email_enabled' => false,
+				'email_recipients' => ['old@example.test'],
+			],
+        ], false);
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+			'onesmtp_settings_action' => 'save_failure_alerts',
+			'onesmtp_settings_nonce' => 'test-nonce',
+			'failure_alert_email_enabled' => '1',
+		];
+        try {
+            (new SettingsAdmin())->handleRequest();
+        } catch (RuntimeException $exception) {
+            self::assertSame('Aculect Mail settings admin redirected.', $exception->getMessage());
+        }
+        $settings = get_option('onesmtp_settings');
+        self::assertSame([], $settings['failure_alerts']['email_recipients']);
+        self::assertFalse((new \OneSMTP\Alerts\FailureAlertSettingsRepository())->get()->isEmailEnabled());
     }
 
     public function test_invalid_failure_alert_webhook_is_rejected_without_saving(): void

@@ -25,7 +25,10 @@ final class MailConflictNoticeTest extends TestCase
 
     public function test_register_hooks_adds_notice_and_dismiss_handler(): void
     {
-        $notice = new MailConflictNotice($this->detector(['plugins' => [], 'hooks' => []]));
+        $notice = new MailConflictNotice($this->detector([
+			'plugins' => [],
+			'hooks' => [],
+		]));
 
         $notice->registerHooks();
 
@@ -35,7 +38,10 @@ final class MailConflictNoticeTest extends TestCase
 
     public function test_render_is_silent_for_empty_state(): void
     {
-        $notice = new MailConflictNotice($this->detector(['plugins' => [], 'hooks' => []]));
+        $notice = new MailConflictNotice($this->detector([
+			'plugins' => [],
+			'hooks' => [],
+		]));
 
         ob_start();
         $notice->render();
@@ -95,7 +101,10 @@ final class MailConflictNoticeTest extends TestCase
     public function test_dismiss_requires_manage_capability(): void
     {
         $GLOBALS['onesmtp_test_current_user_can'] = false;
-        $notice = new MailConflictNotice($this->detector(['plugins' => [], 'hooks' => []]));
+        $notice = new MailConflictNotice($this->detector([
+			'plugins' => [],
+			'hooks' => [],
+		]));
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('You do not have permission');

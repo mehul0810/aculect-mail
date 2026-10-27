@@ -16,7 +16,7 @@ final class SenderIdentityRepository
     public function get(): SenderIdentity
     {
         $settings = $this->settings->getAll();
-        $sender = isset($settings[self::KEY]) && is_array($settings[self::KEY]) ? $settings[self::KEY] : [];
+        $sender = isset($settings[ self::KEY ]) && is_array($settings[ self::KEY ]) ? $settings[ self::KEY ] : [];
 
         return SenderIdentity::fromArray($sender);
     }
@@ -24,7 +24,7 @@ final class SenderIdentityRepository
     public function save(SenderIdentity $identity): bool
     {
         $settings = $this->settings->getAll();
-        $settings[self::KEY] = $identity->toArray();
+        $settings[ self::KEY ] = $identity->toArray();
 
         return $this->settings->save($settings, 'onesmtp_settings_nonce');
     }
@@ -32,7 +32,7 @@ final class SenderIdentityRepository
     public function saveAuthorized(SenderIdentity $identity): bool
     {
         $settings = $this->settings->getAll();
-        $settings[self::KEY] = $identity->toArray();
+        $settings[ self::KEY ] = $identity->toArray();
 
         return $this->settings->saveAuthorized($settings);
     }

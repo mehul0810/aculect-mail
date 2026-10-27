@@ -46,10 +46,10 @@ final class ProviderRepositoryTest extends TestCase
         self::assertSame('smtp.example.test', $storedConfig['host']);
         self::assertNotSame('plain-password', $storedConfig['password']);
         self::assertNotSame('plain-api-key', $storedConfig['api_key']);
-        self::assertTrue((new SecretVault())->isEncrypted((string) $storedConfig['password']));
-        self::assertTrue((new SecretVault())->isEncrypted((string) $storedConfig['api_key']));
+        self::assertTrue((new SecretVault())->isEncrypted( (string) $storedConfig['password']));
+        self::assertTrue((new SecretVault())->isEncrypted( (string) $storedConfig['api_key']));
 
-        $GLOBALS['wpdb']->providerRowsById[$providerId] = [
+        $GLOBALS['wpdb']->providerRowsById[ $providerId ] = [
             'id' => $providerId,
             'slug' => 'primary',
             'name' => 'Primary SMTP',
@@ -175,17 +175,19 @@ final class ProviderRepositoryTest extends TestCase
 
     public function test_save_rejects_a_second_connection_for_the_same_provider_type(): void
     {
-        $GLOBALS['wpdb']->activeProviders = [[
-            'id' => 7,
-            'slug' => 'emailit-primary',
-            'name' => 'Emailit primary',
-            'adapter_type' => 'emailit',
-            'priority' => 100,
-            'weight' => 1,
-            'is_active' => 1,
-            'circuit_state' => 'closed',
-            'config_json' => '{}',
-        ]];
+        $GLOBALS['wpdb']->activeProviders = [
+			[
+				'id' => 7,
+				'slug' => 'emailit-primary',
+				'name' => 'Emailit primary',
+				'adapter_type' => 'emailit',
+				'priority' => 100,
+				'weight' => 1,
+				'is_active' => 1,
+				'circuit_state' => 'closed',
+				'config_json' => '{}',
+			],
+        ];
 
         $providerId = (new ProviderRepository())->save([
             'name' => 'Emailit duplicate',
@@ -200,8 +202,24 @@ final class ProviderRepositoryTest extends TestCase
     public function test_update_cannot_change_provider_to_an_already_configured_type(): void
     {
         $GLOBALS['wpdb']->activeProviders = [
-            ['id' => 7, 'adapter_type' => 'emailit', 'priority' => 100, 'weight' => 1, 'is_active' => 1, 'circuit_state' => 'closed', 'config_json' => '{}'],
-            ['id' => 8, 'adapter_type' => 'smtp', 'priority' => 100, 'weight' => 1, 'is_active' => 1, 'circuit_state' => 'closed', 'config_json' => '{}'],
+            [
+				'id' => 7,
+				'adapter_type' => 'emailit',
+				'priority' => 100,
+				'weight' => 1,
+				'is_active' => 1,
+				'circuit_state' => 'closed',
+				'config_json' => '{}',
+			],
+            [
+				'id' => 8,
+				'adapter_type' => 'smtp',
+				'priority' => 100,
+				'weight' => 1,
+				'is_active' => 1,
+				'circuit_state' => 'closed',
+				'config_json' => '{}',
+			],
         ];
 
         $providerId = (new ProviderRepository())->save([

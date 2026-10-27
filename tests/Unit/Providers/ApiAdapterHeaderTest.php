@@ -115,7 +115,7 @@ final class ApiAdapterHeaderTest extends TestCase
         $last = end($GLOBALS['onesmtp_test_remote_posts']);
         self::assertIsArray($last);
 
-        $payload = json_decode((string) ($last['args']['body'] ?? ''), true);
+        $payload = json_decode( (string) ($last['args']['body'] ?? ''), true);
         self::assertIsArray($payload);
 
         return $payload;

@@ -30,7 +30,7 @@ final class SchedulerNotice
 
     public function render(): void
     {
-        if (! Capabilities::canManage()) {
+        if ( ! Capabilities::canManage()) {
             return;
         }
 
@@ -46,7 +46,7 @@ final class SchedulerNotice
             );
         }
 
-        if (! $this->health->isAvailable()) {
+        if ( ! $this->health->isAvailable()) {
             $this->renderLinkedNotice(
                 'notice-error',
                 __(
@@ -61,7 +61,7 @@ final class SchedulerNotice
         }
 
         $snapshot = $this->diagnostics->snapshot();
-        if ((int) $snapshot['overdue_retry_count'] <= 0) {
+        if ( (int) $snapshot['overdue_retry_count'] <= 0) {
             return;
         }
 

@@ -29,7 +29,7 @@ final class MessageRepositoryTest extends TestCase
         ], 6, 'message-uuid');
 
         self::assertSame(1, $messageId);
-        $payload = json_decode((string) $GLOBALS['wpdb']->inserts[0]['data']['payload_json'], true);
+        $payload = json_decode( (string) $GLOBALS['wpdb']->inserts[0]['data']['payload_json'], true);
 
         self::assertIsArray($payload);
         self::assertArrayNotHasKey('attachments', $payload);
@@ -49,12 +49,12 @@ final class MessageRepositoryTest extends TestCase
             'attachments' => ['/private/tmp/invoice.pdf'],
         ]);
 
-        $payload = json_decode((string) $GLOBALS['wpdb']->updates[0]['data']['payload_json'], true);
+        $payload = json_decode( (string) $GLOBALS['wpdb']->updates[0]['data']['payload_json'], true);
 
         self::assertIsArray($payload);
         self::assertArrayNotHasKey('attachments', $payload);
-        self::assertSame(1, $payload[AttachmentLogSanitizer::PAYLOAD_KEY]['count'] ?? null);
-        self::assertSame('invoice.pdf', $payload[AttachmentLogSanitizer::PAYLOAD_KEY]['items'][0]['filename'] ?? null);
+        self::assertSame(1, $payload[ AttachmentLogSanitizer::PAYLOAD_KEY ]['count'] ?? null);
+        self::assertSame('invoice.pdf', $payload[ AttachmentLogSanitizer::PAYLOAD_KEY ]['items'][0]['filename'] ?? null);
         self::assertStringNotContainsString('/private/tmp', (string) $GLOBALS['wpdb']->updates[0]['data']['payload_json']);
     }
 

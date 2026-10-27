@@ -16,7 +16,7 @@ final class BackgroundSendingSettingsRepository
     public function get(): BackgroundSendingSettings
     {
         $settings = $this->settings->getAll();
-        $background = isset($settings[self::KEY]) && is_array($settings[self::KEY]) ? $settings[self::KEY] : [];
+        $background = isset($settings[ self::KEY ]) && is_array($settings[ self::KEY ]) ? $settings[ self::KEY ] : [];
 
         return BackgroundSendingSettings::fromArray($background);
     }
@@ -24,7 +24,7 @@ final class BackgroundSendingSettingsRepository
     public function save(BackgroundSendingSettings $background): bool
     {
         $settings = $this->settings->getAll();
-        $settings[self::KEY] = $background->toArray();
+        $settings[ self::KEY ] = $background->toArray();
 
         return $this->settings->save($settings, 'onesmtp_settings_nonce');
     }

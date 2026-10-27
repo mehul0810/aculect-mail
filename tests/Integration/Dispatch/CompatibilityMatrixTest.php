@@ -76,7 +76,7 @@ final class CompatibilityMatrixTest extends TestCase
         self::assertSame(hash('sha256', wp_json_encode($mailArgs['to'])), $messageInsert['data']['recipients_hash']);
         self::assertSame(hash('sha256', (string) $mailArgs['message']), $messageInsert['data']['body_hash']);
 
-        $payload = json_decode((string) $messageInsert['data']['payload_json'], true);
+        $payload = json_decode( (string) $messageInsert['data']['payload_json'], true);
         self::assertIsArray($payload);
         self::assertSame($mailArgs['onesmtp_source'], $payload['onesmtp_source'] ?? null);
         self::assertContains('X-OneSMTP-Synthetic-Source: ' . $mailArgs['onesmtp_source']['type'], $payload['headers'] ?? []);
@@ -84,7 +84,7 @@ final class CompatibilityMatrixTest extends TestCase
 
         $captureEvent = $this->findEventInsert('message_captured');
         self::assertNotNull($captureEvent);
-        $captureContext = json_decode((string) $captureEvent['data']['context_json'], true);
+        $captureContext = json_decode( (string) $captureEvent['data']['context_json'], true);
         self::assertSame($mailArgs['subject'], $captureContext['subject'] ?? null);
         self::assertSame($mailArgs['onesmtp_source']['fixture'], $captureContext['message_uuid'] ?? null);
 
@@ -127,7 +127,7 @@ final class CompatibilityMatrixTest extends TestCase
 
         $retryEvent = $this->findEventInsert('retry_scheduled');
         self::assertNotNull($retryEvent);
-        $retryContext = json_decode((string) $retryEvent['data']['context_json'], true);
+        $retryContext = json_decode( (string) $retryEvent['data']['context_json'], true);
         self::assertSame(2, $retryContext['attempt'] ?? null);
     }
 
@@ -165,7 +165,10 @@ final class CompatibilityMatrixTest extends TestCase
                     'commerce-recipient@example.test',
                     'Synthetic receipt update',
                     'Fixture body for a receipt or order update.',
-                    ['object_id' => 'fixture-order-1001', 'event' => 'receipt_update']
+                    [
+						'object_id' => 'fixture-order-1001',
+						'event' => 'receipt_update',
+					]
                 ),
                 true,
             ],
@@ -176,7 +179,10 @@ final class CompatibilityMatrixTest extends TestCase
                     'member-recipient@example.test',
                     'Synthetic access update',
                     'Fixture body for an access or membership update.',
-                    ['object_id' => 'fixture-member-2001', 'event' => 'access_update']
+                    [
+						'object_id' => 'fixture-member-2001',
+						'event' => 'access_update',
+					]
                 ),
                 true,
             ],
@@ -187,7 +193,10 @@ final class CompatibilityMatrixTest extends TestCase
                     'job-recipient@example.test',
                     'Synthetic queued task notification',
                     'Fixture body for a queued background task notification.',
-                    ['job_id' => 'fixture-job-3001', 'event' => 'task_notification']
+                    [
+						'job_id' => 'fixture-job-3001',
+						'event' => 'task_notification',
+					]
                 ),
                 false,
             ],
@@ -251,7 +260,7 @@ final class CompatibilityMatrixTest extends TestCase
         ];
 
         $GLOBALS['wpdb']->activeProviders = [$provider];
-        $GLOBALS['wpdb']->providerRowsById[$id] = $provider;
+        $GLOBALS['wpdb']->providerRowsById[ $id ] = $provider;
     }
 
     private function findInsert(string $tableSuffix): ?array

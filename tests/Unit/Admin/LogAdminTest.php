@@ -69,7 +69,7 @@ final class LogAdminTest extends TestCase
 
         self::assertStringContainsString('Recent messages', $html);
         self::assertStringContainsString('No email activity yet', $html);
-        self::assertStringContainsString('data-onesmtp-dataviews="delivery-messages"', $html);
+        self::assertStringContainsString('onesmtp-activity-empty', $html);
     }
 
     public function test_render_queue_management_shows_pending_status_and_switchovers(): void
@@ -108,7 +108,7 @@ final class LogAdminTest extends TestCase
 
     public function test_queue_retry_now_action_uses_scheduler_callback(): void
     {
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::RESEND_EMAILS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::RESEND_EMAILS ] = true;
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_POST = [
             'onesmtp_log_action' => 'queue_retry_now',
@@ -302,7 +302,10 @@ final class LogAdminTest extends TestCase
             'id' => 99,
             'message_uuid' => 'lineage-99',
             'payload_json' => wp_json_encode(['to' => 'person@example.net']),
-            'onesmtp_source' => wp_json_encode(['type' => 'theme', 'name' => 'Storefront Child']),
+            'onesmtp_source' => wp_json_encode([
+				'type' => 'theme',
+				'name' => 'Storefront Child',
+			]),
             'status' => 'retry_scheduled',
             'selected_provider_id' => 7,
             'current_attempt' => 2,
@@ -344,7 +347,7 @@ final class LogAdminTest extends TestCase
 
         $html = $this->renderLogs();
 
-        self::assertStringContainsString('Message detail', $html);
+        self::assertStringContainsString('Safe metadata', $html);
         self::assertStringContainsString('lineage-99', $html);
         self::assertStringContainsString('retry scheduled', $html);
         self::assertStringContainsString('Unknown source', $html);
@@ -410,12 +413,15 @@ final class LogAdminTest extends TestCase
 
     public function test_render_detail_shows_resend_form_with_only_eligible_active_providers(): void
     {
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::RESEND_EMAILS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::RESEND_EMAILS ] = true;
         $_GET['onesmtp_message_id'] = '99';
         $GLOBALS['wpdb']->messageRowsById[99] = [
             'id' => 99,
             'message_uuid' => 'lineage-99',
-            'payload_json' => wp_json_encode(['to' => 'person@example.net', 'message' => 'Private body']),
+            'payload_json' => wp_json_encode([
+				'to' => 'person@example.net',
+				'message' => 'Private body',
+			]),
             'status' => 'failed',
             'selected_provider_id' => 7,
             'current_attempt' => 2,
@@ -423,8 +429,22 @@ final class LogAdminTest extends TestCase
         ];
         $GLOBALS['wpdb']->recentMessageRows = [$GLOBALS['wpdb']->messageRowsById[99] + ['attempt_count' => 2]];
         $GLOBALS['wpdb']->activeProviders = [
-            ['id' => 7, 'name' => 'Primary SMTP', 'adapter_type' => 'smtp', 'is_active' => 1, 'priority' => 1, 'weight' => 1],
-            ['id' => 8, 'name' => 'Inactive SMTP', 'adapter_type' => 'smtp', 'is_active' => 0, 'priority' => 2, 'weight' => 1],
+            [
+				'id' => 7,
+				'name' => 'Primary SMTP',
+				'adapter_type' => 'smtp',
+				'is_active' => 1,
+				'priority' => 1,
+				'weight' => 1,
+			],
+            [
+				'id' => 8,
+				'name' => 'Inactive SMTP',
+				'adapter_type' => 'smtp',
+				'is_active' => 0,
+				'priority' => 2,
+				'weight' => 1,
+			],
             [
                 'id' => 9,
                 'name' => 'Open Circuit',
@@ -452,7 +472,7 @@ final class LogAdminTest extends TestCase
 
     public function test_render_list_exposes_bulk_resend_only_for_failed_messages(): void
     {
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::RESEND_EMAILS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::RESEND_EMAILS ] = true;
         $GLOBALS['wpdb']->recentMessageRows = [
             [
                 'id' => 31,
@@ -493,12 +513,15 @@ final class LogAdminTest extends TestCase
 
     public function test_render_detail_shows_forward_form_to_safe_admin_address(): void
     {
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::RESEND_EMAILS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::RESEND_EMAILS ] = true;
         $_GET['onesmtp_message_id'] = '99';
         $GLOBALS['wpdb']->messageRowsById[99] = [
             'id' => 99,
             'message_uuid' => 'lineage-99',
-            'payload_json' => wp_json_encode(['to' => 'person@example.net', 'subject' => 'Secret subject']),
+            'payload_json' => wp_json_encode([
+				'to' => 'person@example.net',
+				'subject' => 'Secret subject',
+			]),
             'status' => 'failed',
             'selected_provider_id' => 0,
             'current_attempt' => 2,
@@ -620,7 +643,7 @@ final class LogAdminTest extends TestCase
 
     public function test_bulk_resend_requires_valid_nonce(): void
     {
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::RESEND_EMAILS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::RESEND_EMAILS ] = true;
         $GLOBALS['onesmtp_test_nonce_valid'] = false;
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_POST = [
@@ -659,7 +682,7 @@ final class LogAdminTest extends TestCase
             'onesmtp_log_action' => 'export_csv',
             'onesmtp_log_export_nonce' => 'test-nonce',
         ];
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::VIEW_LOGS] = false;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::VIEW_LOGS ] = false;
 
         try {
             (new LogAdmin(new MessageRepository(), new AttemptRepository(), new ProviderRepository()))->handleRequest();
@@ -668,7 +691,7 @@ final class LogAdminTest extends TestCase
             self::assertStringContainsString('You do not have permission to export Aculect Mail logs.', $exception->getMessage());
         }
 
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::VIEW_LOGS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::VIEW_LOGS ] = true;
         $GLOBALS['onesmtp_test_nonce_valid'] = false;
 
         try {
@@ -757,7 +780,7 @@ final class LogAdminTest extends TestCase
 
     public function test_resend_action_invokes_pipeline_with_eligible_provider_override(): void
     {
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::RESEND_EMAILS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::RESEND_EMAILS ] = true;
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_POST = [
             'onesmtp_log_action' => 'resend',
@@ -771,7 +794,14 @@ final class LogAdminTest extends TestCase
             'payload_json' => wp_json_encode(['to' => 'person@example.net']),
         ];
         $GLOBALS['wpdb']->activeProviders = [
-            ['id' => 7, 'name' => 'Primary SMTP', 'adapter_type' => 'smtp', 'is_active' => 1, 'priority' => 1, 'weight' => 1],
+            [
+				'id' => 7,
+				'name' => 'Primary SMTP',
+				'adapter_type' => 'smtp',
+				'is_active' => 1,
+				'priority' => 1,
+				'weight' => 1,
+			],
         ];
         $called = [];
 
@@ -799,7 +829,7 @@ final class LogAdminTest extends TestCase
         self::assertStringContainsString('onesmtp_message_id=99', (string) $GLOBALS['onesmtp_test_redirect']['location']);
         self::assertSame('audit_manual_resend', $GLOBALS['wpdb']->inserts[0]['data']['event_type']);
 
-        $context = json_decode((string) $GLOBALS['wpdb']->inserts[0]['data']['context_json'], true);
+        $context = json_decode( (string) $GLOBALS['wpdb']->inserts[0]['data']['context_json'], true);
 
         self::assertSame('resent', $context['status'] ?? null);
         self::assertTrue($context['provider_override'] ?? false);
@@ -807,7 +837,7 @@ final class LogAdminTest extends TestCase
 
     public function test_bulk_resend_selected_failed_messages_invokes_pipeline_and_skips_non_failed(): void
     {
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::RESEND_EMAILS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::RESEND_EMAILS ] = true;
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_POST = [
             'onesmtp_log_action' => 'bulk_resend',
@@ -861,7 +891,7 @@ final class LogAdminTest extends TestCase
 
     public function test_resend_action_rejects_ineligible_provider_before_pipeline_call(): void
     {
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::RESEND_EMAILS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::RESEND_EMAILS ] = true;
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_POST = [
             'onesmtp_log_action' => 'resend',
@@ -875,7 +905,14 @@ final class LogAdminTest extends TestCase
             'payload_json' => wp_json_encode(['to' => 'person@example.net']),
         ];
         $GLOBALS['wpdb']->activeProviders = [
-            ['id' => 7, 'name' => 'Primary SMTP', 'adapter_type' => 'smtp', 'is_active' => 1, 'priority' => 1, 'weight' => 1],
+            [
+				'id' => 7,
+				'name' => 'Primary SMTP',
+				'adapter_type' => 'smtp',
+				'is_active' => 1,
+				'priority' => 1,
+				'weight' => 1,
+			],
         ];
         $called = false;
 
@@ -919,7 +956,7 @@ final class LogAdminTest extends TestCase
 
     public function test_forward_action_sends_safe_summary_without_raw_payload_or_secret_data(): void
     {
-        $GLOBALS['onesmtp_test_current_user_caps'][Capabilities::RESEND_EMAILS] = true;
+        $GLOBALS['onesmtp_test_current_user_caps'][ Capabilities::RESEND_EMAILS ] = true;
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_POST = [
             'onesmtp_log_action' => 'forward_summary',
@@ -940,7 +977,10 @@ final class LogAdminTest extends TestCase
                         'type' => 'plugin',
                         'name' => 'Contact Forms',
                         'slug' => 'contact-forms',
-                        'metadata' => ['file' => '/srv/private/plugin.php', 'token' => 'source-secret'],
+                        'metadata' => [
+							'file' => '/srv/private/plugin.php',
+							'token' => 'source-secret',
+						],
                     ],
                     AttachmentLogSanitizer::PAYLOAD_KEY => [
                         'enabled' => true,
@@ -1028,7 +1068,7 @@ final class LogAdminTest extends TestCase
         $html = $this->renderLogs();
 
         self::assertStringContainsString('The requested log entry was not found.', $html);
-        self::assertStringContainsString('No email activity yet', $html);
+        self::assertStringContainsString('Back to activity', $html);
     }
 
     private function renderLogs(): string

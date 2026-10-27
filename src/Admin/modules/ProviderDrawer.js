@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from '@wordpress/element';
+import { createPortal, useEffect, useRef, useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import {
 	Button,
@@ -185,6 +185,12 @@ export default function ProviderInlineSettings( { config } ) {
 	const [ isConfirmingDelete, setIsConfirmingDelete ] = useState( false );
 	const panelId = `onesmtp-provider-settings-${ type }`;
 	const headingRef = useRef( null );
+	const triggerRef = useRef( null );
+	const catalogTriggerRef = useRef( null );
+	const savedChangesRef = useRef( false );
+	const editorHost = document.querySelector(
+		'[data-onesmtp-provider-editor]'
+	);
 	const isEditing = editingId !== null;
 	const editingConnection = connections.find(
 		( connection ) => Number( connection.id ) === editingId
@@ -200,9 +206,24 @@ export default function ProviderInlineSettings( { config } ) {
 	);
 
 	useEffect( () => {
-		if ( isOpen && headingRef.current ) {
-			headingRef.current.focus();
+		if ( ! isOpen ) {
+			return;
 		}
+		const overview = document.querySelector(
+			'[data-onesmtp-provider-overview]'
+		);
+		if ( overview ) {
+			overview.hidden = true;
+		}
+		headingRef.current?.focus();
+		return () => {
+			if ( overview ) {
+				overview.hidden = false;
+			}
+			if ( ! triggerRef.current?.closest( '[hidden]' ) ) {
+				triggerRef.current?.focus();
+			}
+		};
 	}, [ isOpen ] );
 
 	const updateConfig = ( field, value ) =>
@@ -210,12 +231,29 @@ export default function ProviderInlineSettings( { config } ) {
 			...current,
 			[ field ]: value,
 		} ) );
+	useEffect( () => {
+		if ( window.location.hash === `#onesmtp-provider-${ type }` ) {
+			catalogTriggerRef.current?.focus();
+		}
+	}, [ type ] );
 	const close = () => {
+		if ( savedChangesRef.current ) {
+			// Refresh PHP summaries after a successful mutation. The fragment
+			// returns keyboard focus to this provider when its island mounts.
+			const url = new URL( window.location.href );
+			url.searchParams.set( 'tab', 'onesmtp-providers' );
+			url.hash = `onesmtp-provider-${ type }`;
+			window.history.replaceState( null, '', url.href );
+			window.location.reload();
+			return;
+		}
 		setIsOpen( false );
 		setNotice( null );
 		setIsConfirmingDelete( false );
 	};
 	const openNewConnection = () => {
+		triggerRef.current = editorHost?.ownerDocument.activeElement;
+		setSavedId( null );
 		setEditingId( null );
 		setName(
 			`${ config.label || __( 'Provider', 'onesmtp' ) } ${ __(
@@ -237,6 +275,8 @@ export default function ProviderInlineSettings( { config } ) {
 			return;
 		}
 
+		triggerRef.current = editorHost?.ownerDocument.activeElement;
+		setSavedId( id );
 		setEditingId( id );
 		setName(
 			connection.name ||
@@ -253,6 +293,24 @@ export default function ProviderInlineSettings( { config } ) {
 		setIsConfirmingDelete( false );
 		setIsOpen( true );
 	};
+	useEffect( () => {
+		const edit = ( event ) => {
+			const link = event.target.closest( '[data-onesmtp-edit-provider]' );
+			if ( ! link || link.dataset.onesmtpEditProvider !== type ) {
+				return;
+			}
+			event.preventDefault();
+			openExistingConnection(
+				connections.find(
+					( connection ) =>
+						String( connection.id ) === link.dataset.connectionId
+				)
+			);
+		};
+		document.addEventListener( 'click', edit );
+		return () => document.removeEventListener( 'click', edit );
+	} );
+
 	const save = async () => {
 		setIsSaving( true );
 		setNotice( null );
@@ -276,6 +334,7 @@ export default function ProviderInlineSettings( { config } ) {
 			const providerId = Number(
 				response?.provider?.id || editingId || 0
 			);
+			savedChangesRef.current = true;
 			setSavedId( providerId > 0 ? providerId : null );
 			if ( providerId > 0 ) {
 				setEditingId( providerId );
@@ -378,7 +437,7 @@ export default function ProviderInlineSettings( { config } ) {
 	};
 	let saveButtonLabel = isEditing
 		? __( 'Save changes', 'onesmtp' )
-		: __( 'Connect provider', 'onesmtp' );
+		: __( 'Save connection', 'onesmtp' );
 	if ( isSaving ) {
 		saveButtonLabel = (
 			<>
@@ -394,6 +453,7 @@ export default function ProviderInlineSettings( { config } ) {
 		<>
 			<div className="onesmtp-provider-row-actions">
 				<Button
+					ref={ catalogTriggerRef }
 					variant="secondary"
 					aria-expanded={ isOpen }
 					aria-controls={ panelId }
@@ -408,276 +468,383 @@ export default function ProviderInlineSettings( { config } ) {
 						: __( 'Connect', 'onesmtp' ) }
 				</Button>
 			</div>
-			{ isOpen && (
-				<section
-					id={ panelId }
-					className="onesmtp-provider-inline-settings"
-					aria-label={ __(
-						'Provider connection settings',
-						'onesmtp'
-					) }
-				>
-					<div className="onesmtp-provider-inline-heading">
-						<div>
-							<h4 ref={ headingRef } tabIndex="-1">
-								{ isEditing
-									? `${ __( 'Edit', 'onesmtp' ) } ${
-											name || config.label
-									  }`
-									: `${ __( 'Connect', 'onesmtp' ) } ${
-											config.label
-									  }` }
-							</h4>
-							<p>
-								{ isEditing
-									? __(
-											'Update this connection without exposing its stored credentials.',
-											'onesmtp'
-									  )
-									: config.description }
-							</p>
-						</div>
-					</div>
-					{ notice && (
-						<Notice
-							status={ notice.status }
-							isDismissible={ false }
-						>
-							{ notice.message }
-						</Notice>
-					) }
-					{ isEditing &&
-						editingConnection?.credentialRecoveryRequired && (
-							<Notice status="warning" isDismissible={ false }>
-								{ __(
-									'This connection needs updated credentials before it can deliver email.',
-									'onesmtp'
-								) }
-							</Notice>
-						) }
-					{ isEditing && connections.length > 1 && (
-						<SelectControl
-							__next40pxDefaultSize
-							label={ __( 'Connection', 'onesmtp' ) }
-							value={ String( editingId ) }
-							options={ connections.map( ( connection ) => ( {
-								label:
-									connection.name ||
-									`${ config.label } #${ connection.id }`,
-								value: String( connection.id ),
-							} ) ) }
-							onChange={ ( id ) =>
-								openExistingConnection(
-									connections.find(
-										( connection ) =>
-											String( connection.id ) === id
-									)
-								)
-							}
-						/>
-					) }
-					<TextControl
-						__next40pxDefaultSize
-						label={ __( 'Connection name', 'onesmtp' ) }
-						value={ name }
-						onChange={ setName }
-						required
-						help={ __(
-							'Use a clear internal name, such as “Primary transactional”.',
+			{ isOpen &&
+				editorHost &&
+				createPortal(
+					<section
+						id={ panelId }
+						className="onesmtp-provider-editor"
+						aria-label={ __(
+							'Provider connection settings',
 							'onesmtp'
 						) }
-					/>
-					{ ( fieldsByType[ type ] || [] ).map(
-						( [ field, label, inputType = 'text' ] ) =>
-							inputType === 'number' ? (
-								<TextControl
-									__next40pxDefaultSize
-									key={ field }
-									label={ label }
-									type="number"
-									value={ providerConfig[ field ] || '' }
-									min={ 1 }
-									onChange={ ( value ) =>
-										updateConfig( field, value )
-									}
-								/>
-							) : (
-								<TextControl
-									__next40pxDefaultSize
-									key={ field }
-									label={ label }
-									type={ inputType }
-									value={ providerConfig[ field ] || '' }
-									onChange={ ( value ) =>
-										updateConfig( field, value )
-									}
-									required={
-										! isEditing &&
-										(
-											requiredConfigFields[ type ] || []
-										).includes( field )
-									}
-									help={
-										isEditing && isSensitiveField( field )
-											? __(
-													'Leave blank to keep the stored credential.',
-													'onesmtp'
-											  )
-											: undefined
-									}
-								/>
-							)
-					) }
-					{ type === 'amazon_ses' && (
-						<p className="onesmtp-provider-field-note">
-							{ __(
-								'Use the SMTP credentials generated by Amazon SES for this AWS Region, not your regular AWS access keys. Aculect Mail will use port 587 with TLS.',
-								'onesmtp'
-							) }
-						</p>
-					) }
-					{ type !== 'php_mail' && (
-						<>
-							<TextControl
-								__next40pxDefaultSize
-								label={ __( 'From email', 'onesmtp' ) }
-								type="email"
-								value={ providerConfig.from_email || '' }
-								onChange={ ( value ) =>
-									updateConfig( 'from_email', value )
-								}
-							/>
-							<TextControl
-								__next40pxDefaultSize
-								label={ __( 'From name', 'onesmtp' ) }
-								value={ providerConfig.from_name || '' }
-								onChange={ ( value ) =>
-									updateConfig( 'from_name', value )
-								}
-							/>
-						</>
-					) }
-					<div className="onesmtp-provider-drawer-options">
-						<TextControl
-							__next40pxDefaultSize
-							type="number"
-							label={ __( 'Priority', 'onesmtp' ) }
-							value={ priority }
-							min={ 1 }
-							onChange={ setPriority }
-							help={ __(
-								'Lower values are selected first.',
-								'onesmtp'
-							) }
-						/>
-						<TextControl
-							__next40pxDefaultSize
-							type="number"
-							label={ __( 'Weight', 'onesmtp' ) }
-							value={ weight }
-							min={ 1 }
-							onChange={ setWeight }
-							help={ __(
-								'Used when providers share a priority.',
-								'onesmtp'
-							) }
-						/>
-					</div>
-					<ToggleControl
-						label={ __( 'Activate for delivery', 'onesmtp' ) }
-						checked={ isActive }
-						onChange={ setIsActive }
-					/>
-					{ savedId && (
-						<div className="onesmtp-provider-test-step">
-							<h5>{ __( 'Test email', 'onesmtp' ) }</h5>
-							<p>
-								{ __(
-									'Verify the saved connection without leaving this provider row.',
-									'onesmtp'
-								) }
-							</p>
-							<TextControl
-								__next40pxDefaultSize
-								label={ __( 'Send test to', 'onesmtp' ) }
-								type="email"
-								value={ testRecipient }
-								onChange={ setTestRecipient }
-							/>
-							<Button
-								variant="secondary"
-								onClick={ sendTest }
-								disabled={ isTesting || ! testRecipient.trim() }
-							>
-								{ isTesting ? (
-									<>
-										<Spinner />{ ' ' }
-										{ __( 'Sending…', 'onesmtp' ) }
-									</>
-								) : (
-									__( 'Send test email', 'onesmtp' )
-								) }
-							</Button>
-						</div>
-					) }
-					<div className="onesmtp-drawer-actions">
-						{ isEditing && (
-							<Button
-								className="onesmtp-provider-delete-button"
-								variant="tertiary"
-								isDestructive
-								onClick={ () => setIsConfirmingDelete( true ) }
-								disabled={ isSaving }
-							>
-								{ __( 'Delete connection', 'onesmtp' ) }
-							</Button>
-						) }
-						<span className="onesmtp-provider-drawer-actions-spacer" />
+					>
 						<Button
-							variant="secondary"
+							variant="tertiary"
 							onClick={ close }
-							disabled={ isSaving }
+							disabled={ isSaving || isTesting }
+							className="onesmtp-back-link"
 						>
-							{ __( 'Cancel', 'onesmtp' ) }
+							<span aria-hidden="true">←</span>{ ' ' }
+							{ __( 'Back to providers', 'onesmtp' ) }
 						</Button>
-						<Button
-							variant="primary"
-							onClick={ save }
-							disabled={
-								isSaving || ! name.trim() || ! hasRequiredConfig
-							}
-						>
-							{ saveButtonLabel }
-						</Button>
-					</div>
-					{ isConfirmingDelete && (
-						<Notice
-							status="warning"
-							isDismissible={ false }
-							actions={ [
-								{
-									label: __( 'Keep connection', 'onesmtp' ),
-									onClick: () =>
-										setIsConfirmingDelete( false ),
-								},
-								{
-									label: __(
-										'Delete permanently',
+						<div className="onesmtp-connection-layout">
+							<aside className="onesmtp-dark-panel">
+								<h3>{ config.label }</h3>
+								<p>{ config.description }</p>
+								<h4>
+									{ __(
+										'Credentials stay private',
 										'onesmtp'
-									),
-									isDestructive: true,
-									onClick: deleteConnection,
-								},
-							] }
-						>
-							{ __(
-								'Delete this provider connection? This cannot be undone.',
-								'onesmtp'
-							) }
-						</Notice>
-					) }
-				</section>
-			) }
+									) }
+								</h4>
+								<p>
+									{ __(
+										'Saved secrets are never shown here. Leave a secret field blank to keep its current value.',
+										'onesmtp'
+									) }
+								</p>
+								<h4>
+									{ __(
+										'Verify before relying on delivery',
+										'onesmtp'
+									) }
+								</h4>
+								<p>
+									{ __(
+										'Saving is separate from testing. Send an explicit test after saving this connection.',
+										'onesmtp'
+									) }
+								</p>
+							</aside>
+							<div className="onesmtp-panel">
+								<div className="onesmtp-provider-inline-heading">
+									<div>
+										<h4 ref={ headingRef } tabIndex="-1">
+											{ isEditing
+												? `${ __(
+														'Edit',
+														'onesmtp'
+												  ) } ${ name || config.label }`
+												: `${ __(
+														'Connect',
+														'onesmtp'
+												  ) } ${ config.label }` }
+										</h4>
+										<p>
+											{ isEditing
+												? __(
+														'Update this connection without exposing its stored credentials.',
+														'onesmtp'
+												  )
+												: config.description }
+										</p>
+									</div>
+								</div>
+								{ notice && (
+									<Notice
+										status={ notice.status }
+										isDismissible={ false }
+									>
+										{ notice.message }
+									</Notice>
+								) }
+								{ isEditing &&
+									editingConnection?.credentialRecoveryRequired && (
+										<Notice
+											status="warning"
+											isDismissible={ false }
+										>
+											{ __(
+												'This connection needs updated credentials before it can deliver email.',
+												'onesmtp'
+											) }
+										</Notice>
+									) }
+								{ isEditing && connections.length > 1 && (
+									<SelectControl
+										__next40pxDefaultSize
+										label={ __( 'Connection', 'onesmtp' ) }
+										value={ String( editingId ) }
+										options={ connections.map(
+											( connection ) => ( {
+												label:
+													connection.name ||
+													`${ config.label } #${ connection.id }`,
+												value: String( connection.id ),
+											} )
+										) }
+										onChange={ ( id ) =>
+											openExistingConnection(
+												connections.find(
+													( connection ) =>
+														String(
+															connection.id
+														) === id
+												)
+											)
+										}
+									/>
+								) }
+								<TextControl
+									__next40pxDefaultSize
+									label={ __( 'Connection name', 'onesmtp' ) }
+									value={ name }
+									onChange={ setName }
+									required
+									help={ __(
+										'Use a clear internal name, such as “Primary transactional”.',
+										'onesmtp'
+									) }
+								/>
+								{ ( fieldsByType[ type ] || [] ).map(
+									( [ field, label, inputType = 'text' ] ) =>
+										inputType === 'number' ? (
+											<TextControl
+												__next40pxDefaultSize
+												key={ field }
+												label={ label }
+												type="number"
+												value={
+													providerConfig[ field ] ||
+													''
+												}
+												min={ 1 }
+												onChange={ ( value ) =>
+													updateConfig( field, value )
+												}
+											/>
+										) : (
+											<TextControl
+												__next40pxDefaultSize
+												key={ field }
+												label={ label }
+												type={ inputType }
+												value={
+													providerConfig[ field ] ||
+													''
+												}
+												onChange={ ( value ) =>
+													updateConfig( field, value )
+												}
+												required={
+													! isEditing &&
+													(
+														requiredConfigFields[
+															type
+														] || []
+													).includes( field )
+												}
+												help={
+													isEditing &&
+													isSensitiveField( field )
+														? __(
+																'Leave blank to keep the stored credential.',
+																'onesmtp'
+														  )
+														: undefined
+												}
+											/>
+										)
+								) }
+								{ type === 'amazon_ses' && (
+									<p className="onesmtp-provider-field-note">
+										{ __(
+											'Use the SMTP credentials generated by Amazon SES for this AWS Region, not your regular AWS access keys. Aculect Mail will use port 587 with TLS.',
+											'onesmtp'
+										) }
+									</p>
+								) }
+								{ type !== 'php_mail' && (
+									<>
+										<TextControl
+											__next40pxDefaultSize
+											label={ __(
+												'From email',
+												'onesmtp'
+											) }
+											type="email"
+											value={
+												providerConfig.from_email || ''
+											}
+											onChange={ ( value ) =>
+												updateConfig(
+													'from_email',
+													value
+												)
+											}
+										/>
+										<TextControl
+											__next40pxDefaultSize
+											label={ __(
+												'From name',
+												'onesmtp'
+											) }
+											value={
+												providerConfig.from_name || ''
+											}
+											onChange={ ( value ) =>
+												updateConfig(
+													'from_name',
+													value
+												)
+											}
+										/>
+									</>
+								) }
+								<div className="onesmtp-provider-drawer-options">
+									<TextControl
+										__next40pxDefaultSize
+										type="number"
+										label={ __( 'Priority', 'onesmtp' ) }
+										value={ priority }
+										min={ 1 }
+										onChange={ setPriority }
+										help={ __(
+											'Lower values are selected first.',
+											'onesmtp'
+										) }
+									/>
+									<TextControl
+										__next40pxDefaultSize
+										type="number"
+										label={ __( 'Weight', 'onesmtp' ) }
+										value={ weight }
+										min={ 1 }
+										onChange={ setWeight }
+										help={ __(
+											'Used when providers share a priority.',
+											'onesmtp'
+										) }
+									/>
+								</div>
+								<ToggleControl
+									label={ __(
+										'Activate for delivery',
+										'onesmtp'
+									) }
+									checked={ isActive }
+									onChange={ setIsActive }
+								/>
+								{ savedId && (
+									<div className="onesmtp-provider-test-step">
+										<h5>
+											{ __( 'Test email', 'onesmtp' ) }
+										</h5>
+										<p>
+											{ __(
+												'Verify the saved connection without leaving this provider row.',
+												'onesmtp'
+											) }
+										</p>
+										<TextControl
+											__next40pxDefaultSize
+											label={ __(
+												'Send test to',
+												'onesmtp'
+											) }
+											type="email"
+											value={ testRecipient }
+											onChange={ setTestRecipient }
+										/>
+										<Button
+											variant="secondary"
+											onClick={ sendTest }
+											disabled={
+												isTesting ||
+												! testRecipient.trim()
+											}
+										>
+											{ isTesting ? (
+												<>
+													<Spinner />{ ' ' }
+													{ __(
+														'Sending…',
+														'onesmtp'
+													) }
+												</>
+											) : (
+												__(
+													'Send test email',
+													'onesmtp'
+												)
+											) }
+										</Button>
+									</div>
+								) }
+								<div className="onesmtp-drawer-actions">
+									{ isEditing && (
+										<Button
+											className="onesmtp-provider-delete-button"
+											variant="tertiary"
+											isDestructive
+											onClick={ () =>
+												setIsConfirmingDelete( true )
+											}
+											disabled={ isSaving || isTesting }
+										>
+											{ __(
+												'Delete connection',
+												'onesmtp'
+											) }
+										</Button>
+									) }
+									<span className="onesmtp-provider-drawer-actions-spacer" />
+									<Button
+										variant="secondary"
+										onClick={ close }
+										disabled={ isSaving || isTesting }
+									>
+										{ __( 'Cancel', 'onesmtp' ) }
+									</Button>
+									<Button
+										variant="primary"
+										onClick={ save }
+										disabled={
+											isSaving ||
+											! name.trim() ||
+											! hasRequiredConfig
+										}
+									>
+										{ saveButtonLabel }
+									</Button>
+								</div>
+								{ isConfirmingDelete && (
+									<Notice
+										status="warning"
+										isDismissible={ false }
+										actions={ [
+											{
+												label: __(
+													'Keep connection',
+													'onesmtp'
+												),
+												onClick: () =>
+													setIsConfirmingDelete(
+														false
+													),
+											},
+											{
+												label: __(
+													'Delete permanently',
+													'onesmtp'
+												),
+												isDestructive: true,
+												onClick: deleteConnection,
+											},
+										] }
+									>
+										{ __(
+											'Delete this provider connection? This cannot be undone.',
+											'onesmtp'
+										) }
+									</Notice>
+								) }
+							</div>
+						</div>
+					</section>,
+					editorHost
+				) }
 		</>
 	);
 }

@@ -72,11 +72,18 @@ final class DeliverabilitySmokeTest extends TestCase
 
         $emptySetup = $this->renderSetup($wizard);
 
-        self::assertStringContainsString('Complete Aculect Mail setup', $emptySetup);
-        self::assertStringContainsString('Set up sender identity', $emptySetup);
-        self::assertStringContainsString('Save first provider', $emptySetup);
-        self::assertStringContainsString('Add and activate a provider before sending a setup test email.', $emptySetup);
+        self::assertStringContainsString('Email delivery needs setup', $emptySetup);
+        self::assertStringContainsString('Add your sender identity', $emptySetup);
+        self::assertStringContainsString('Save and continue', $emptySetup);
+        self::assertStringContainsString('Connect a provider', $emptySetup);
+        self::assertStringNotContainsString('name="onesmtp_setup_action" value="send_test"', $emptySetup);
 
+        update_option('onesmtp_settings', [
+			'sender_identity' => [
+				'from_email' => 'sender@example.test',
+				'from_name' => 'Smoke sender',
+			],
+        ], false);
         $this->postSetupProvider();
         $this->expectRedirect('Aculect Mail setup wizard redirected.', static function () use ($wizard): void {
             $wizard->handleRequest();
@@ -92,7 +99,7 @@ final class DeliverabilitySmokeTest extends TestCase
         $delivery = new ProviderDeliveryManager(new ProviderAdapterRegistry(['smtp' => $adapter]));
         $testWizard = new SetupWizard($providers, $delivery, new EventRepository());
 
-        $this->postSetupTestSend((int) $providerRow['id']);
+        $this->postSetupTestSend( (int) $providerRow['id']);
         $this->expectRedirect('Aculect Mail setup wizard redirected.', static function () use ($testWizard): void {
             $testWizard->handleRequest();
         });
@@ -111,7 +118,7 @@ final class DeliverabilitySmokeTest extends TestCase
         self::assertStringContainsString('Complete', $completedSetup);
         self::assertStringNotContainsString('credential-value', $completedSetup);
 
-        $this->seedMessageLogRows((int) $providerRow['id']);
+        $this->seedMessageLogRows( (int) $providerRow['id']);
 
         $_GET = ['onesmtp_message_id' => '21'];
         $logAdmin = new LogAdmin(
@@ -128,8 +135,8 @@ final class DeliverabilitySmokeTest extends TestCase
 
         $logDetail = $this->renderLogs($logAdmin);
 
-        self::assertStringContainsString('Recent messages', $logDetail);
-        self::assertStringContainsString('Message detail', $logDetail);
+        self::assertStringContainsString('Back to activity', $logDetail);
+        self::assertStringContainsString('Safe metadata', $logDetail);
         self::assertStringContainsString('Manual resend', $logDetail);
         self::assertStringContainsString('Smoke SMTP (smtp)', $logDetail);
         self::assertStringContainsString('1 recipients across example.test', $logDetail);
@@ -137,7 +144,7 @@ final class DeliverabilitySmokeTest extends TestCase
         self::assertStringNotContainsString('recipient@example.test', $logDetail);
         self::assertStringNotContainsString('Internal smoke body', $logDetail);
 
-        $this->postManualResend((int) $providerRow['id']);
+        $this->postManualResend( (int) $providerRow['id']);
         $this->expectRedirect('Aculect Mail log admin redirected.', static function () use ($logAdmin): void {
             $logAdmin->handleRequest();
         });

@@ -16,33 +16,35 @@ final class InstallerTest extends TestCase
         $GLOBALS['onesmtp_test_options'] = [];
         $GLOBALS['onesmtp_test_dbdelta_queries'] = [];
         $GLOBALS['onesmtp_test_roles'] = [
-            'administrator' => new class {
+            'administrator' => new class() {
                 /** @var array<string,bool> */
                 public array $caps = [];
 
                 public function add_cap(string $capability): void
                 {
-                    $this->caps[$capability] = true;
+                    $this->caps[ $capability ] = true;
                 }
 
                 public function remove_cap(string $capability): void
                 {
-                    unset($this->caps[$capability]);
+                    unset($this->caps[ $capability ]);
                 }
             },
         ];
 
-        if (! defined('ABSPATH')) {
+        if ( ! defined('ABSPATH')) {
             define('ABSPATH', sys_get_temp_dir() . '/onesmtp-wp/');
         }
 
         $upgradeDir = ABSPATH . 'wp-admin/includes';
-        if (! is_dir($upgradeDir)) {
+        if ( ! is_dir($upgradeDir)) {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- Creates an isolated temporary WordPress bootstrap stub; WP_Filesystem is unavailable in this unit fixture.
             mkdir($upgradeDir, 0777, true);
         }
 
         $upgradeFile = $upgradeDir . '/upgrade.php';
-        if (! file_exists($upgradeFile)) {
+        if ( ! file_exists($upgradeFile)) {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Creates an isolated temporary WordPress bootstrap stub; WP_Filesystem is unavailable in this unit fixture.
             file_put_contents($upgradeFile, "<?php\n");
         }
     }
@@ -52,16 +54,16 @@ final class InstallerTest extends TestCase
         Installer::activate();
 
         self::assertCount(4, $GLOBALS['onesmtp_test_dbdelta_queries']);
-        self::assertSame((string) constant('ONESMTP_VERSION'), get_option(Installer::VERSION_OPTION));
+        self::assertSame( (string) constant('ONESMTP_VERSION'), get_option(Installer::VERSION_OPTION));
         self::assertSame(30, get_option(Installer::RETENTION_DAYS_OPTION));
 
-        $GLOBALS['onesmtp_test_options'][Installer::VERSION_OPTION]['value'] = '0.0.1';
-        $GLOBALS['onesmtp_test_options'][Installer::RETENTION_DAYS_OPTION]['value'] = 90;
+        $GLOBALS['onesmtp_test_options'][ Installer::VERSION_OPTION ]['value'] = '0.0.1';
+        $GLOBALS['onesmtp_test_options'][ Installer::RETENTION_DAYS_OPTION ]['value'] = 90;
 
         Installer::activate();
 
         self::assertCount(8, $GLOBALS['onesmtp_test_dbdelta_queries']);
-        self::assertSame((string) constant('ONESMTP_VERSION'), get_option(Installer::VERSION_OPTION));
+        self::assertSame( (string) constant('ONESMTP_VERSION'), get_option(Installer::VERSION_OPTION));
         self::assertSame(90, get_option(Installer::RETENTION_DAYS_OPTION));
     }
 
@@ -71,18 +73,18 @@ final class InstallerTest extends TestCase
 
         Installer::uninstall();
 
-        self::assertSame((string) constant('ONESMTP_VERSION'), get_option(Installer::VERSION_OPTION));
+        self::assertSame( (string) constant('ONESMTP_VERSION'), get_option(Installer::VERSION_OPTION));
         self::assertSame(30, get_option(Installer::RETENTION_DAYS_OPTION));
     }
 
     public function test_maybe_upgrade_runs_schema_when_stored_version_is_stale(): void
     {
-        $GLOBALS['onesmtp_test_options'][Installer::VERSION_OPTION]['value'] = '0.1.0-stale';
+        $GLOBALS['onesmtp_test_options'][ Installer::VERSION_OPTION ]['value'] = '0.1.0-stale';
 
         Installer::maybeUpgrade();
 
         self::assertCount(4, $GLOBALS['onesmtp_test_dbdelta_queries']);
-        self::assertSame((string) constant('ONESMTP_VERSION'), get_option(Installer::VERSION_OPTION));
+        self::assertSame( (string) constant('ONESMTP_VERSION'), get_option(Installer::VERSION_OPTION));
 
         Installer::maybeUpgrade();
 

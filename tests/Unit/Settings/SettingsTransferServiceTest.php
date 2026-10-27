@@ -168,9 +168,9 @@ final class SettingsTransferServiceTest extends TestCase
             ],
         ]);
 
-        $summary = (new SettingsTransferService())->importJson((string) $json);
+        $summary = (new SettingsTransferService())->importJson( (string) $json);
         $settings = get_option('onesmtp_settings', []);
-        $storedProviderConfig = json_decode((string) $GLOBALS['wpdb']->inserts[0]['data']['config_json'], true);
+        $storedProviderConfig = json_decode( (string) $GLOBALS['wpdb']->inserts[0]['data']['config_json'], true);
 
         self::assertSame(['sender_identity', 'rate_limits', 'failure_alerts', 'background_sending', 'attachment_logging'], $summary['settings_groups']);
         self::assertSame(1, $summary['providers_imported']);
@@ -233,13 +233,13 @@ final class SettingsTransferServiceTest extends TestCase
             ],
         ]);
 
-        $summary = (new SettingsTransferService())->importJson((string) $json);
-        $updatedConfig = json_decode((string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
+        $summary = (new SettingsTransferService())->importJson( (string) $json);
+        $updatedConfig = json_decode( (string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
 
         self::assertSame(1, $summary['providers_imported']);
         self::assertSame(['id' => 7], $GLOBALS['wpdb']->updates[0]['where']);
         self::assertSame('new.example.test', $updatedConfig['host']);
-        self::assertSame('existing-password', $vault->decrypt((string) $updatedConfig['password']));
+        self::assertSame('existing-password', $vault->decrypt( (string) $updatedConfig['password']));
     }
 
     public function test_import_rejects_malformed_and_empty_payloads(): void
@@ -256,12 +256,12 @@ final class SettingsTransferServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Import JSON does not contain supported Aculect Mail settings.');
 
-        (new SettingsTransferService())->importJson((string) wp_json_encode(['settings' => ['unknown' => true]]));
+        (new SettingsTransferService())->importJson( (string) wp_json_encode(['settings' => ['unknown' => true]]));
     }
 
     public function test_import_fires_audit_safe_summary_action(): void
     {
-        $summary = (new SettingsTransferService())->importJson((string) wp_json_encode([
+        $summary = (new SettingsTransferService())->importJson( (string) wp_json_encode([
             'settings' => [
                 'rate_limits' => [
                     'per_hour' => 60,
@@ -275,6 +275,6 @@ final class SettingsTransferServiceTest extends TestCase
         self::assertSame('onesmtp_settings_imported', $action['hook']);
         self::assertSame($summary, $action['args'][0]);
         self::assertStringNotContainsString('example.test', (string) wp_json_encode($action));
-        self::assertStringNotContainsString('secret', strtolower((string) wp_json_encode($action)));
+        self::assertStringNotContainsString('secret', strtolower( (string) wp_json_encode($action)));
     }
 }

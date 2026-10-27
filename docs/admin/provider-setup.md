@@ -33,13 +33,11 @@ adapter; use Generic SMTP for providers without a first-party adapter.
 1. Add credentials/API keys for each provider.
 2. Mark provider priority or rotation order.
 3. Set primary and backup behavior.
-4. Save the connection and send a provider-specific test email from the same expanded provider row.
+4. Save the connection and send a provider-specific test email from the connection editor.
 
 ## Managing configured connections
 
-Each provider remains in a single catalog row after it is connected. The row
-shows its connection name, priority, weight, circuit health, and active status.
-Select **Manage** to update the configured connection in place. Existing
+Configured connections appear above the searchable provider catalog, with priority, weight, circuit health and active status. Select **Manage connection** in that list or **Manage** in the catalog to open the connection editor. After a successful save, returning to Providers refreshes the server-rendered summaries and restores focus to that provider. Existing
 credentials are never displayed; leave a credential field blank while editing
 to retain its stored value.
 

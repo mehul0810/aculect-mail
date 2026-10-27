@@ -34,7 +34,11 @@ final class FailureAlertDispatcherTest extends TestCase
         ], false);
 
         $events = new EventRepository();
-        $context = ['attempt' => 6, 'reason' => 'retry_backend_unavailable', 'failure_category' => 'terminal'];
+        $context = [
+			'attempt' => 6,
+			'reason' => 'retry_backend_unavailable',
+			'failure_category' => 'terminal',
+		];
 
         $events->add('terminal_failure', $context, 101, 5);
         $events->add('terminal_failure', $context, 101, 5);

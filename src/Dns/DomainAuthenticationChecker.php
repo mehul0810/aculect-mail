@@ -50,7 +50,7 @@ final class DomainAuthenticationChecker
 
     private function recordStatus(string $query, string $pattern): string
     {
-        if (! $this->lookupAvailable() || $query === '') {
+        if ( ! $this->lookupAvailable() || $query === '') {
             return self::STATUS_INCONCLUSIVE;
         }
 

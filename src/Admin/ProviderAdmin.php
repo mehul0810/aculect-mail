@@ -45,7 +45,7 @@ final class ProviderAdmin
             return;
         }
 
-        if (! Capabilities::canManage()) {
+        if ( ! Capabilities::canManage()) {
             wp_die(
                 esc_html__('You do not have permission to manage Aculect Mail providers.', 'onesmtp'),
                 esc_html__('Aculect Mail access denied', 'onesmtp'),
@@ -63,8 +63,8 @@ final class ProviderAdmin
 
         if ($action === 'suremail_import') {
             $analysis = get_transient($this->sureMailAnalysisKey());
-            $fingerprint = isset($_POST['suremail_fingerprint']) ? sanitize_text_field(wp_unslash((string) $_POST['suremail_fingerprint'])) : '';
-            if (! is_array($analysis) || $fingerprint === '' || ! hash_equals((string) ($analysis['fingerprint'] ?? ''), $fingerprint)) {
+            $fingerprint = isset($_POST['suremail_fingerprint']) ? sanitize_text_field(wp_unslash( (string) $_POST['suremail_fingerprint'])) : '';
+            if ( ! is_array($analysis) || $fingerprint === '' || ! hash_equals( (string) ($analysis['fingerprint'] ?? ''), $fingerprint)) {
                 $this->redirect('suremail_analysis_expired');
             }
             $result = $this->sureMailMigration->import($fingerprint);
@@ -94,7 +94,7 @@ final class ProviderAdmin
         }
 
         if ($action === 'delete') {
-            $providerId = isset($_POST['provider_id']) ? absint(wp_unslash((string) $_POST['provider_id'])) : 0;
+            $providerId = isset($_POST['provider_id']) ? absint(wp_unslash( (string) $_POST['provider_id'])) : 0;
             $deleted = $providerId > 0 && $this->repository->delete($providerId);
             if ($deleted) {
                 $this->auditLogger->logProviderChange('deleted', $providerId, ['source' => 'providers_admin']);
@@ -103,7 +103,7 @@ final class ProviderAdmin
         }
 
         if ($action === 'toggle') {
-            $providerId = isset($_POST['provider_id']) ? absint(wp_unslash((string) $_POST['provider_id'])) : 0;
+            $providerId = isset($_POST['provider_id']) ? absint(wp_unslash( (string) $_POST['provider_id'])) : 0;
             $provider = $providerId > 0 ? $this->repository->find($providerId) : null;
             if (is_array($provider)) {
                 $provider['is_active'] = empty($provider['is_active']) ? 1 : 0;
@@ -130,11 +130,13 @@ final class ProviderAdmin
         $providers = $this->repository->getAllSafe();
 
         $this->renderNotice();
+        echo '<div data-onesmtp-provider-overview>';
         $this->renderSureMailCompatibility();
+        $this->renderConnections($providers);
         $this->renderProviderCatalog($providers);
         echo '<details id="onesmtp-provider-form" class="onesmtp-provider-form"><summary>' . esc_html__('Add provider', 'onesmtp') . '</summary>';
         $this->renderForm();
-        echo '</details>';
+        echo '</details></div><div data-onesmtp-provider-editor></div>';
     }
 
     /**
@@ -158,21 +160,56 @@ final class ProviderAdmin
     }
 
     /** @param array<int,array<string,mixed>> $providers */
+    private function renderConnections(array $providers): void
+    {
+        echo '<section class="onesmtp-panel"><div class="onesmtp-panel-heading"><div><h3>' . esc_html__('Your connections', 'onesmtp') . '</h3><p>' . esc_html__('Saving credentials configures a connection. Send an explicit test to verify provider acceptance.', 'onesmtp') . '</p></div>';
+        AdminUi::link(__('Add connection', 'onesmtp'), '#onesmtp-provider-catalog', 'plus', true);
+        echo '</div>';
+        if ($providers === []) {
+            AdminUi::notice(__('No connections yet', 'onesmtp'), 'info', __('Choose a provider below to get started.', 'onesmtp'));
+        } else {
+            echo '<table class="widefat onesmtp-responsive-table"><thead><tr>';
+            foreach ([__('Connection', 'onesmtp'), __('Status', 'onesmtp'), __('Routing', 'onesmtp'), __('Health', 'onesmtp'), __('Action', 'onesmtp')] as $label) {
+                echo '<th scope="col">' . esc_html($label) . '</th>';
+            }
+            echo '</tr></thead><tbody>';
+            foreach ($providers as $provider) {
+                $type = (string) ($provider['adapter_type'] ?? '');
+                $id = (int) ($provider['id'] ?? 0);
+                echo '<tr><th scope="row"><strong>' . esc_html( (string) ($provider['name'] ?? '')) . '</strong><span class="onesmtp-meta">' . esc_html($type) . '</span></th><td data-label="' . esc_attr__('Status', 'onesmtp') . '">';
+                AdminUi::badge( ! empty($provider['is_active']) ? __('Active', 'onesmtp') : __('Inactive', 'onesmtp'), ! empty($provider['is_active']) ? 'success' : 'neutral');
+                echo '</td><td data-label="' . esc_attr__('Routing', 'onesmtp') . '">' . esc_html(sprintf(
+                    /* translators: 1: priority, 2: weight. */
+                    __('Priority %1$d · Weight %2$d', 'onesmtp'), (int) ($provider['priority'] ?? 100), (int) ($provider['weight'] ?? 1)
+                )) . '</td><td data-label="' . esc_attr__('Health', 'onesmtp') . '">';
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Health helper escapes labels and dates inside fixed markup.
+                echo $this->formatCircuitHealth($provider);
+                if ($id > 0 && $this->repository->hasCredentialRecoveryRequired($id)) {
+                    echo '<span class="onesmtp-field-error">' . esc_html__('Credential update needed', 'onesmtp') . '</span>';
+                }
+                echo '</td><td><a class="button" href="#onesmtp-provider-catalog" data-onesmtp-edit-provider="' . esc_attr($type) . '" data-connection-id="' . esc_attr( (string) $id) . '">' . esc_html__('Manage connection', 'onesmtp') . '</a></td></tr>';
+            }
+            echo '</tbody></table>';
+        }
+        echo '</section>';
+    }
+
+    /** @param array<int,array<string,mixed>> $providers */
     private function renderProviderCatalog(array $providers): void
     {
         $providersByType = [];
         foreach ($providers as $provider) {
-            $type = sanitize_key((string) ($provider['adapter_type'] ?? ''));
+            $type = sanitize_key( (string) ($provider['adapter_type'] ?? ''));
             if ($type !== '') {
-                $providersByType[$type][] = $provider;
+                $providersByType[ $type ][] = $provider;
             }
         }
 
-        echo '<section class="onesmtp-provider-catalog" aria-label="' . esc_attr__('Email providers', 'onesmtp') . '">';
+        echo '<section id="onesmtp-provider-catalog" class="onesmtp-provider-catalog" aria-label="' . esc_attr__('Email providers', 'onesmtp') . '"><div class="onesmtp-panel-heading"><div><h3>' . esc_html__('Choose a provider', 'onesmtp') . '</h3><p>' . esc_html__('Connect a supported service with its required credentials.', 'onesmtp') . '</p></div><label class="onesmtp-provider-search">' . esc_html__('Find a provider', 'onesmtp') . '<input type="search" data-onesmtp-provider-search autocomplete="off"></label></div><p data-onesmtp-provider-empty hidden role="status">' . esc_html__('No providers match your search.', 'onesmtp') . ' <button type="button" class="button" data-onesmtp-provider-clear>' . esc_html__('Clear search', 'onesmtp') . '</button></p>';
         echo '<div class="onesmtp-provider-list">';
 
         foreach (ProviderTypes::metadata() as $type => $metadata) {
-            $connections = $providersByType[$type] ?? [];
+            $connections = $providersByType[ $type ] ?? [];
             $activeCount = count(array_filter($connections, static fn (array $provider): bool => ! empty($provider['is_active'])));
             $connectionCount = count($connections);
             $statusClass = $activeCount > 0 ? 'is-active' : ($connectionCount > 0 ? 'is-inactive' : 'is-disconnected');
@@ -194,17 +231,17 @@ final class ProviderAdmin
                 'connections' => $this->connectionEditorData($connections),
                 'endpoint' => rest_url('onesmtp/v1/providers'),
                 'nonce' => wp_create_nonce('wp_rest'),
-                'adminEmail' => sanitize_email((string) get_option('admin_email')),
+                'adminEmail' => sanitize_email( (string) get_option('admin_email')),
             ];
 
-            echo '<article class="onesmtp-provider-list-item" data-provider-type="' . esc_attr((string) $type) . '">';
+            echo '<article id="onesmtp-provider-' . esc_attr( (string) $type) . '" class="onesmtp-provider-list-item" data-provider-type="' . esc_attr( (string) $type) . '" data-provider-label="' . esc_attr( (string) $metadata['label']) . '">';
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- ProviderIcons renders an SVG selected from a private provider allowlist and escapes its attributes.
-            echo '<span class="onesmtp-provider-list-icon" aria-hidden="true">' . ProviderIcons::render((string) $type) . '</span>';
-            echo '<div class="onesmtp-provider-list-copy"><strong>' . esc_html((string) $metadata['label']) . '</strong><span>' . esc_html((string) $metadata['description']) . '</span>';
+            echo '<span class="onesmtp-provider-list-icon" aria-hidden="true">' . ProviderIcons::render( (string) $type) . '</span>';
+            echo '<div class="onesmtp-provider-list-copy"><strong>' . esc_html( (string) $metadata['label']) . '</strong><span>' . esc_html( (string) $metadata['description']) . '</span>';
             $this->renderConnectionSummary($connections);
             echo '</div>';
             echo '<span class="onesmtp-provider-status ' . esc_attr($statusClass) . '">' . esc_html($statusLabel) . '</span>';
-            echo '<div data-onesmtp-component="provider-inline-settings" data-onesmtp-provider-config="' . esc_attr((string) wp_json_encode($config)) . '"></div>';
+            echo '<div data-onesmtp-component="provider-inline-settings" data-onesmtp-provider-config="' . esc_attr( (string) wp_json_encode($config)) . '"></div>';
             echo '</article>';
         }
 
@@ -239,7 +276,7 @@ final class ProviderAdmin
 
         $connection = $connections[0];
         $providerId = (int) ($connection['id'] ?? 0);
-        $providerName = trim((string) ($connection['name'] ?? ''));
+        $providerName = trim( (string) ($connection['name'] ?? ''));
         if ($providerName === '') {
             $providerName = sprintf(
                 /* translators: %d: provider connection ID. */
@@ -293,7 +330,7 @@ final class ProviderAdmin
     {
         echo '<h3>' . esc_html__('Add or update provider', 'onesmtp') . '</h3>';
         echo '<form method="post" class="onesmtp-provider-form">';
-        wp_nonce_field(self::ACTION_NAME, self::NONCE_NAME);
+        AdminUi::nonce(self::ACTION_NAME, self::NONCE_NAME);
         echo '<input type="hidden" name="' . esc_attr(self::ACTION_NAME) . '" value="save">';
 
         echo '<table class="form-table" role="presentation"><tbody>';
@@ -314,7 +351,7 @@ final class ProviderAdmin
 
         echo '</tbody></table>';
         echo '<p class="description">' . esc_html__('Leave credential fields blank when updating a provider to keep existing stored secrets.', 'onesmtp') . '</p>';
-        submit_button(__('Save provider', 'onesmtp'));
+        AdminUi::submit(__('Save provider', 'onesmtp'));
         echo '</form>';
     }
 
@@ -374,11 +411,11 @@ final class ProviderAdmin
         $fields = [];
 
         foreach ($config as $field => $value) {
-            if (! is_scalar($value) || $value === '' || $this->isSensitiveConfigField((string) $field)) {
+            if ( ! is_scalar($value) || $value === '' || $this->isSensitiveConfigField( (string) $field)) {
                 continue;
             }
 
-            $fields[] = sanitize_key((string) $field);
+            $fields[] = sanitize_key( (string) $field);
         }
 
         sort($fields);
@@ -396,11 +433,11 @@ final class ProviderAdmin
         $fields = [];
 
         foreach ($config as $field => $value) {
-            if (! is_scalar($value) || $value === '' || ! $this->isSensitiveConfigField((string) $field)) {
+            if ( ! is_scalar($value) || $value === '' || ! $this->isSensitiveConfigField( (string) $field)) {
                 continue;
             }
 
-            $fields[] = sanitize_key((string) $field);
+            $fields[] = sanitize_key( (string) $field);
         }
 
         sort($fields);
@@ -427,7 +464,7 @@ final class ProviderAdmin
             return;
         }
 
-        if (! $this->dnsAuthentication->lookupAvailable()) {
+        if ( ! $this->dnsAuthentication->lookupAvailable()) {
             echo '<div class="notice notice-warning inline"><p>' . esc_html__('DNS TXT lookup is not available in this PHP environment. Aculect Mail can show expected records, but it cannot verify SPF, DKIM, or DMARC readiness here.', 'onesmtp') . '</p></div>';
         }
 
@@ -445,12 +482,12 @@ final class ProviderAdmin
         foreach ($domains as $domain => $context) {
             $check = $this->dnsAuthentication->check($domain, (string) ($context['selector'] ?? ''));
             echo '<tr>';
-            echo '<th scope="row"><code>' . esc_html((string) $check['domain']) . '</code></th>';
+            echo '<th scope="row"><code>' . esc_html( (string) $check['domain']) . '</code></th>';
             echo '<td>' . esc_html(implode(', ', $context['sources'])) . '</td>';
             echo '<td>' . esc_html($this->dnsStatusLabel($check['spf']['status'])) . '<br><code>' . esc_html($check['spf']['query']) . '</code></td>';
             echo '<td>' . esc_html($this->dnsStatusLabel($check['dkim']['status'])) . '<br>' . ($check['dkim']['query'] !== '' ? '<code>' . esc_html($check['dkim']['query']) . '</code>' : '<span class="description">' . esc_html__('Add a DKIM selector to enable selector-specific checks.', 'onesmtp') . '</span>') . '</td>';
             echo '<td>' . esc_html($this->dnsStatusLabel($check['dmarc']['status'])) . '<br><code>' . esc_html($check['dmarc']['query']) . '</code></td>';
-            echo '<td>' . esc_html($this->dnsGuidance((string) ($context['provider_type'] ?? ''), (string) ($context['selector'] ?? ''))) . '</td>';
+            echo '<td>' . esc_html($this->dnsGuidance( (string) ($context['provider_type'] ?? ''), (string) ($context['selector'] ?? ''))) . '</td>';
             echo '</tr>';
         }
 
@@ -473,38 +510,38 @@ final class ProviderAdmin
                 continue;
             }
 
-            if (! isset($domains[$domain])) {
-                $domains[$domain] = [
+            if ( ! isset($domains[ $domain ])) {
+                $domains[ $domain ] = [
                     'sources' => [],
                     'selector' => '',
                     'provider_type' => '',
                 ];
             }
 
-            $providerName = trim((string) ($provider['name'] ?? ''));
+            $providerName = trim( (string) ($provider['name'] ?? ''));
             $source = $providerName !== '' ? $providerName : __('Provider sender', 'onesmtp');
-            $domains[$domain]['sources'][] = $source;
-            $domains[$domain]['selector'] = isset($config['dkim_selector']) ? (string) $config['dkim_selector'] : '';
-            $domains[$domain]['provider_type'] = (string) ($provider['adapter_type'] ?? '');
+            $domains[ $domain ]['sources'][] = $source;
+            $domains[ $domain ]['selector'] = isset($config['dkim_selector']) ? (string) $config['dkim_selector'] : '';
+            $domains[ $domain ]['provider_type'] = (string) ($provider['adapter_type'] ?? '');
         }
 
         $identityDomain = $this->domainFromEmail($this->senderIdentity->get()->getFromEmail());
         if ($identityDomain !== '') {
-            if (! isset($domains[$identityDomain])) {
-                $domains[$identityDomain] = [
+            if ( ! isset($domains[ $identityDomain ])) {
+                $domains[ $identityDomain ] = [
                     'sources' => [],
                     'selector' => '',
                     'provider_type' => '',
                 ];
             }
 
-            $domains[$identityDomain]['sources'][] = __('Sender identity', 'onesmtp');
+            $domains[ $identityDomain ]['sources'][] = __('Sender identity', 'onesmtp');
         }
 
         foreach ($domains as $domain => $context) {
             $sources = array_values(array_unique(array_map('strval', $context['sources'])));
             sort($sources);
-            $domains[$domain] = [
+            $domains[ $domain ] = [
                 'sources' => $sources,
                 'selector' => (string) $context['selector'],
                 'provider_type' => (string) $context['provider_type'],
@@ -523,7 +560,7 @@ final class ProviderAdmin
             return '';
         }
 
-        $domain = strtolower((string) substr(strrchr($email, '@') ?: '', 1));
+        $domain = strtolower( (string) substr(strrchr($email, '@') ?: '', 1));
         $domain = preg_replace('/[^a-z0-9.-]/', '', $domain) ?? '';
 
         return trim($domain, '.');
@@ -569,22 +606,26 @@ final class ProviderAdmin
      */
     private function normalizePostedProvider(): array
     {
-        $providerId = isset($_POST['provider_id']) ? absint(wp_unslash((string) $_POST['provider_id'])) : 0;
-        $adapterType = isset($_POST['adapter_type']) ? sanitize_key(wp_unslash((string) $_POST['adapter_type'])) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Private helper reached only after handleRequest() checks capability and the action nonce.
+        $providerId = isset($_POST['provider_id']) ? absint(wp_unslash( (string) $_POST['provider_id'])) : 0;
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Private helper reached only after handleRequest() checks capability and the action nonce.
+        $adapterType = isset($_POST['adapter_type']) ? sanitize_key(wp_unslash( (string) $_POST['adapter_type'])) : '';
         $existing = $providerId > 0 ? $this->repository->find($providerId) : null;
 
         $payload = [
-            'name' => isset($_POST['name']) ? sanitize_text_field(wp_unslash((string) $_POST['name'])) : '',
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Private helper reached only after handleRequest() checks capability and the action nonce.
+            'name' => isset($_POST['name']) ? sanitize_text_field(wp_unslash( (string) $_POST['name'])) : '',
             'adapter_type' => ProviderTypes::isSupported($adapterType) ? $adapterType : '',
             'priority' => $this->normalizePostedPositiveInteger('priority', 100),
             'weight' => $this->normalizePostedPositiveInteger('weight', 1),
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Private helper reached only after handleRequest() checks capability and the action nonce.
             'is_active' => ! empty($_POST['is_active']) ? 1 : 0,
             'config' => $this->normalizePostedConfig($providerId),
         ];
 
         if ($providerId > 0) {
             $payload['id'] = $providerId;
-            $payload['slug'] = is_array($existing) ? sanitize_key((string) ($existing['slug'] ?? '')) : '';
+            $payload['slug'] = is_array($existing) ? sanitize_key( (string) ($existing['slug'] ?? '')) : '';
         }
 
         return $payload;
@@ -597,24 +638,25 @@ final class ProviderAdmin
     {
         $existing = $providerId > 0 ? $this->repository->find($providerId) : null;
         $config = is_array($existing) && isset($existing['config']) && is_array($existing['config']) ? $existing['config'] : [];
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Private helper reached only after handleRequest() checks capability and the action nonce.
         $posted = isset($_POST['config']) && is_array($_POST['config']) ? wp_unslash($_POST['config']) : [];
 
         foreach ($this->configFields() as $field => $label) {
-            if (! array_key_exists($field, $posted)) {
+            if ( ! array_key_exists($field, $posted)) {
                 continue;
             }
 
-            $value = sanitize_text_field((string) $posted[$field]);
+            $value = sanitize_text_field( (string) $posted[ $field ]);
             if ($value === '' && $this->isSensitiveField($field)) {
                 continue;
             }
 
             if ($value === '') {
-                unset($config[$field]);
+                unset($config[ $field ]);
                 continue;
             }
 
-            $config[$field] = $value;
+            $config[ $field ] = $value;
         }
 
         return $config;
@@ -625,13 +667,15 @@ final class ProviderAdmin
         return (bool) preg_match('/pass|secret|token|api(?:_|-)?key/i', $field);
     }
 
-    private function normalizePostedPositiveInteger(string $field, int $default): int
+    private function normalizePostedPositiveInteger(string $field, int $defaultValue): int
     {
-        if (! isset($_POST[$field])) {
-            return $default;
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Private helper reached only after handleRequest() checks capability and the action nonce.
+        if ( ! isset($_POST[ $field ])) {
+            return $defaultValue;
         }
 
-        $value = trim(wp_unslash((string) $_POST[$field]));
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Private helper reached only after handleRequest() checks capability and the action nonce.
+        $value = trim(wp_unslash( (string) $_POST[ $field ]));
         if ($value === '' || ! ctype_digit($value)) {
             return 1;
         }
@@ -649,7 +693,7 @@ final class ProviderAdmin
             return esc_html__('Circuit closed', 'onesmtp');
         }
 
-        $until = isset($provider['circuit_until']) ? trim((string) $provider['circuit_until']) : '';
+        $until = isset($provider['circuit_until']) ? trim( (string) $provider['circuit_until']) : '';
         if ($until === '') {
             return esc_html__('Circuit open', 'onesmtp') . '<br><span class="description">' . esc_html__('Open until manually closed.', 'onesmtp') . '</span>';
         }
@@ -663,7 +707,8 @@ final class ProviderAdmin
 
     private function renderNotice(): void
     {
-        $status = isset($_GET['onesmtp_provider_status']) ? sanitize_key(wp_unslash((string) $_GET['onesmtp_provider_status'])) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin display/filter parameter; sanitized here and escaped at output, with no state change.
+        $status = isset($_GET['onesmtp_provider_status']) ? sanitize_key(wp_unslash( (string) $_GET['onesmtp_provider_status'])) : '';
         if ($status === '') {
             return;
         }
@@ -674,7 +719,7 @@ final class ProviderAdmin
             'suremail_import_failed' => __('SureMail import could not be completed. Analyze the setup again and review the reported requirements.', 'onesmtp'),
             'suremail_analysis_expired' => __('The SureMail analysis expired or the source configuration changed. Analyze it again before importing.', 'onesmtp'),
         ];
-        $message = $messages[$status] ?? __('Provider action completed.', 'onesmtp');
+        $message = $messages[ $status ] ?? __('Provider action completed.', 'onesmtp');
 
         $isError = in_array($status, ['failed', 'suremail_import_failed', 'suremail_analysis_expired'], true);
         echo '<div class="notice ' . ($isError ? 'notice-error' : 'notice-success') . '"><p>' . esc_html($message) . '</p></div>';
@@ -683,7 +728,7 @@ final class ProviderAdmin
     private function renderSureMailCompatibility(): void
     {
         $analysis = get_transient($this->sureMailAnalysisKey());
-        if (! is_array($analysis)) {
+        if ( ! is_array($analysis)) {
             $analysis = $this->sureMailMigration->analyze();
         }
         if (empty($analysis['detected'])) {
@@ -694,24 +739,25 @@ final class ProviderAdmin
         echo '<div><h3 id="onesmtp-suremail-title">' . esc_html__('SureMail compatibility', 'onesmtp') . '</h3>';
         echo '<p>' . esc_html__('SureMail is present on this site. Only one mail plugin should own live delivery at a time. Aculect Mail will not disable SureMail or change its settings.', 'onesmtp') . '</p>';
 
-        $hasAnalysis = isset($_GET['onesmtp_provider_status']) && sanitize_key(wp_unslash((string) $_GET['onesmtp_provider_status'])) === 'suremail_analyzed';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin display/filter parameter; sanitized here and escaped at output, with no state change.
+        $hasAnalysis = isset($_GET['onesmtp_provider_status']) && sanitize_key(wp_unslash( (string) $_GET['onesmtp_provider_status'])) === 'suremail_analyzed';
         if ($hasAnalysis) {
-            if (! empty($analysis['supported'])) {
-                $label = ProviderTypes::metadata()[(string) $analysis['target_type']]['label'] ?? (string) $analysis['target_type'];
+            if ( ! empty($analysis['supported'])) {
+                $label = ProviderTypes::metadata()[ (string) $analysis['target_type'] ]['label'] ?? (string) $analysis['target_type'];
                 $analysisLabel = ! empty($analysis['importable']) ? __('Ready to import:', 'onesmtp') : __('Review required:', 'onesmtp');
-                echo '<p class="onesmtp-compatibility-result"><strong>' . esc_html($analysisLabel) . '</strong> ' . esc_html((string) ($analysis['default_name'] ?: $label)) . ' (' . esc_html((string) $label) . '). ';
+                echo '<p class="onesmtp-compatibility-result"><strong>' . esc_html($analysisLabel) . '</strong> ' . esc_html( (string) ($analysis['default_name'] ?: $label)) . ' (' . esc_html( (string) $label) . '). ';
                 $skipped = (int) $analysis['skipped_connections'];
                 $skippedMessage = $skipped === 1
                     ? /* translators: %d: number of SureMail connections excluded from import. */ __('%d other connection will be skipped.', 'onesmtp')
                     : /* translators: %d: number of SureMail connections excluded from import. */ __('%d other connections will be skipped.', 'onesmtp');
                 echo esc_html(sprintf($skippedMessage, $skipped)) . '</p>';
-                if (! empty($analysis['already_configured'])) {
+                if ( ! empty($analysis['already_configured'])) {
                     echo '<p>' . esc_html__('Aculect Mail already has this provider type configured, so import is disabled to preserve the one-provider/one-connection model.', 'onesmtp') . '</p>';
                 }
                 if (empty($analysis['version_supported'])) {
                     echo '<p>' . esc_html__('This SureMail version is outside the migration versions Aculect Mail can safely validate.', 'onesmtp') . '</p>';
                 }
-                if (! empty($analysis['missing_fields'])) {
+                if ( ! empty($analysis['missing_fields'])) {
                     echo '<p>' . esc_html(sprintf(
                         /* translators: %s: comma-separated provider credential field names. */
                         __('Import needs these required fields before it can continue: %s.', 'onesmtp'),
@@ -725,13 +771,13 @@ final class ProviderAdmin
         }
         echo '</div><div class="onesmtp-compatibility-actions">';
         echo '<form method="post"><input type="hidden" name="' . esc_attr(self::ACTION_NAME) . '" value="suremail_analyze">';
-        wp_nonce_field(self::ACTION_NAME, self::NONCE_NAME);
-        submit_button(__('Analyze SureMail setup', 'onesmtp'), 'secondary', 'submit', false);
+        AdminUi::nonce(self::ACTION_NAME, self::NONCE_NAME);
+        AdminUi::submit(__('Analyze SureMail setup', 'onesmtp'), 'secondary', 'submit', false);
         echo '</form>';
         if ($hasAnalysis && ! empty($analysis['importable']) && empty($analysis['already_configured']) && ! empty($analysis['fingerprint'])) {
-            echo '<form method="post"><input type="hidden" name="' . esc_attr(self::ACTION_NAME) . '" value="suremail_import"><input type="hidden" name="suremail_fingerprint" value="' . esc_attr((string) $analysis['fingerprint']) . '">';
-            wp_nonce_field(self::ACTION_NAME, self::NONCE_NAME);
-            submit_button(__('Import default connection', 'onesmtp'), 'primary', 'submit', false);
+            echo '<form method="post"><input type="hidden" name="' . esc_attr(self::ACTION_NAME) . '" value="suremail_import"><input type="hidden" name="suremail_fingerprint" value="' . esc_attr( (string) $analysis['fingerprint']) . '">';
+            AdminUi::nonce(self::ACTION_NAME, self::NONCE_NAME);
+            AdminUi::submit(__('Import default connection', 'onesmtp'), 'primary', 'submit', false);
             echo '</form>';
         }
         echo '</div></section>';

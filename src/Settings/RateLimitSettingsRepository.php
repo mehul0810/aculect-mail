@@ -16,7 +16,7 @@ final class RateLimitSettingsRepository
     public function get(): RateLimitSettings
     {
         $settings = $this->settings->getAll();
-        $limits = isset($settings[self::KEY]) && is_array($settings[self::KEY]) ? $settings[self::KEY] : [];
+        $limits = isset($settings[ self::KEY ]) && is_array($settings[ self::KEY ]) ? $settings[ self::KEY ] : [];
 
         return RateLimitSettings::fromArray($limits);
     }
@@ -24,7 +24,7 @@ final class RateLimitSettingsRepository
     public function save(RateLimitSettings $limits): bool
     {
         $settings = $this->settings->getAll();
-        $settings[self::KEY] = $limits->toArray();
+        $settings[ self::KEY ] = $limits->toArray();
 
         return $this->settings->save($settings, 'onesmtp_settings_nonce');
     }

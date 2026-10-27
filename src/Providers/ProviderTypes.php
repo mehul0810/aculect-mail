@@ -318,8 +318,12 @@ final class ProviderTypes
                 'description' => __('Send through the Zoho Mail API using an OAuth access token.', 'onesmtp'),
                 'icon' => 'zoho_mail',
                 'capabilities' => [
-                    'smtp' => false, 'api_delivery' => true, 'test_send' => true,
-                    'oauth' => true, 'attachments' => false, 'provider_message_id' => true,
+                    'smtp' => false,
+					'api_delivery' => true,
+					'test_send' => true,
+                    'oauth' => true,
+					'attachments' => false,
+					'provider_message_id' => true,
                 ],
                 'notes' => ['available' => __('Requires a Zoho Mail account ID and an OAuth token with message create access.', 'onesmtp')],
             ],
@@ -328,8 +332,12 @@ final class ProviderTypes
                 'description' => __('Send transactional email through Emailit API v2.', 'onesmtp'),
                 'icon' => 'emailit',
                 'capabilities' => [
-                    'smtp' => false, 'api_delivery' => true, 'test_send' => true,
-                    'oauth' => false, 'attachments' => false, 'provider_message_id' => true,
+                    'smtp' => false,
+					'api_delivery' => true,
+					'test_send' => true,
+                    'oauth' => false,
+					'attachments' => false,
+					'provider_message_id' => true,
                 ],
                 'notes' => ['available' => __('Use an Emailit API key and a verified sending domain.', 'onesmtp')],
             ],
@@ -338,8 +346,12 @@ final class ProviderTypes
                 'description' => __('Send transactional email through the Netcore Email API.', 'onesmtp'),
                 'icon' => 'netcore',
                 'capabilities' => [
-                    'smtp' => false, 'api_delivery' => true, 'test_send' => true,
-                    'oauth' => false, 'attachments' => false, 'provider_message_id' => true,
+                    'smtp' => false,
+					'api_delivery' => true,
+					'test_send' => true,
+                    'oauth' => false,
+					'attachments' => false,
+					'provider_message_id' => true,
                 ],
                 'notes' => ['available' => __('Choose the US or EU API region and provide an API key.', 'onesmtp')],
             ],
@@ -370,6 +382,6 @@ final class ProviderTypes
     {
         $metadata = self::metadata();
 
-        return ! empty($metadata[$type]['capabilities'][$capability]);
+        return ! empty($metadata[ $type ]['capabilities'][ $capability ]);
     }
 }

@@ -33,6 +33,8 @@ For the Studio site, use `studio --version`, `studio status`, and `studio wp` co
 - Never commit provider credentials, API keys, tokens, private payloads, or production recipients.
 - Record known baseline failures separately from regressions introduced by the change.
 - A passing unit suite does not prove live provider delivery; state that boundary explicitly.
+- Scheduler integration evidence must use persisted Action Scheduler jobs and an independent runner, with local mail capture. Verify background delivery, transient retry after the real backoff, rate-limit deferral, cancellation/duplicate protection, and dependency absence/recovery. Record the scheduler version and runner; mocked callbacks or an available API alone do not prove scheduled execution.
+- The performance smoke script uses static simulated queue timings and synthetic log rows; a passing result does not establish measured WordPress throughput.
 - Release evidence must include the commit SHA, branch, package checksum, PHP/WordPress versions tested, and any skipped checks.
 
 ## Screenshot evidence for visible changes
@@ -52,3 +54,10 @@ For the Studio site, use `studio --version`, `studio status`, and `studio wp` co
 5. Package/install smoke for the artifact that will be distributed.
 
 Do not weaken a test or mark a check optional to make a release green. Fix the behavior, narrow the test to its real contract, or record an explicit maintainer-approved exception.
+
+
+## Responsive admin design checks
+
+The admin browser suite now covers the mobile section picker, notification fields that disable and leave form submission while their channel is off, invalid sender input with unsaved feedback, search recovery, repeated history navigation, and resend cancellation with focus return. The fixture intercepts submissions; it cannot establish provider delivery success. PHP regressions separately cover the acceptance-rate denominator/window, disabled-field preservation, and partial sender updates.
+
+For visual QA, inspect the approved references against local WordPress rendering at 1440, 900 and 390 pixels, including notifications, provider editor error/saved states, details, privacy/import and diagnostics. Exercise built lazy modules with an initial network failure and interrupted/repeated navigation. Use the existing isolated Mailpit harness to verify actual success/failure delivery and translation timing separately. Simulated queue timings are not measured throughput, and a production build's chunk-size warning must be reported rather than suppressed.

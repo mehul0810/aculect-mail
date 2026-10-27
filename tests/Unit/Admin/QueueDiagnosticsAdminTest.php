@@ -134,7 +134,10 @@ final class QueueDiagnosticsAdminTest extends TestCase
                 'is_active' => 1,
                 'circuit_state' => 'closed',
                 'circuit_until' => null,
-                'config_json' => wp_json_encode(['password' => 'hunter2', 'host' => 'smtp.example.test']),
+                'config_json' => wp_json_encode([
+					'password' => 'hunter2',
+					'host' => 'smtp.example.test',
+				]),
             ],
         ];
 

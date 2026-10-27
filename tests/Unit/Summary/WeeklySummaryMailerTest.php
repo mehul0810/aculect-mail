@@ -33,7 +33,7 @@ final class WeeklySummaryMailerTest extends TestCase
         $mailer->syncSchedule();
 
         self::assertArrayHasKey(WeeklySummaryMailer::HOOK, $GLOBALS['onesmtp_test_cron_events']);
-        self::assertSame('onesmtp_weekly', $GLOBALS['onesmtp_test_cron_events'][WeeklySummaryMailer::HOOK]['recurrence']);
+        self::assertSame('onesmtp_weekly', $GLOBALS['onesmtp_test_cron_events'][ WeeklySummaryMailer::HOOK ]['recurrence']);
 
         update_option('onesmtp_settings', [
             'weekly_summary' => [
@@ -63,20 +63,20 @@ final class WeeklySummaryMailerTest extends TestCase
     public function test_scheduled_summary_uses_aggregate_counts_without_sensitive_log_payloads(): void
     {
         $since = gmdate('Y-m-d H:i:s', time() - 604800);
-        $GLOBALS['wpdb']->dashboardActivityRowsBySince[$since] = [
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $since ] = [
             'sent_count' => 14,
             'failed_count' => 3,
             'retry_count' => 5,
             'payload_json' => '{"message":"secret body","api_key":"secret-key"}',
         ];
-        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[$since] = 2;
+        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[ $since ] = 2;
         $GLOBALS['wpdb']->dashboardPendingRow = [
             'queued_count' => 1,
             'retry_scheduled_count' => 2,
             'retrying_count' => 0,
             'payload_json' => '{"to":"private@example.test"}',
         ];
-        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[$since] = [
+        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[ $since ] = [
             [
                 'provider_id' => 10,
                 'provider_name' => 'Primary SMTP api_key=secret-key',
@@ -86,7 +86,7 @@ final class WeeklySummaryMailerTest extends TestCase
                 'retry_count' => 5,
             ],
         ];
-        $GLOBALS['wpdb']->dashboardProviderFailoverRowsBySince[$since] = [
+        $GLOBALS['wpdb']->dashboardProviderFailoverRowsBySince[ $since ] = [
             [
                 'provider_id' => 10,
                 'provider_name' => 'Primary SMTP',
@@ -122,12 +122,12 @@ final class WeeklySummaryMailerTest extends TestCase
     public function test_empty_activity_window_still_sends_clear_empty_summary(): void
     {
         $since = gmdate('Y-m-d H:i:s', time() - 604800);
-        $GLOBALS['wpdb']->dashboardActivityRowsBySince[$since] = [
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $since ] = [
             'sent_count' => 0,
             'failed_count' => 0,
             'retry_count' => 0,
         ];
-        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[$since] = 0;
+        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[ $since ] = 0;
         $GLOBALS['wpdb']->dashboardPendingRow = [
             'queued_count' => 0,
             'retry_scheduled_count' => 0,
@@ -162,12 +162,12 @@ final class WeeklySummaryMailerTest extends TestCase
             ];
         }
 
-        $GLOBALS['wpdb']->dashboardActivityRowsBySince[$since] = [
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $since ] = [
             'sent_count' => 78,
             'failed_count' => 0,
             'retry_count' => 0,
         ];
-        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[$since] = $rows;
+        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[ $since ] = $rows;
         update_option('onesmtp_settings', [
             'weekly_summary' => [
                 'enabled' => true,

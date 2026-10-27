@@ -126,10 +126,14 @@ final class ProviderAdminTest extends TestCase
                     'id' => 'default-id',
                     'type' => 'EMAILIT',
                     'connection_title' => 'Imported Emailit',
+                    // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Encodes synthetic migration credentials for the tested legacy format; no executable payload.
                     'api_key' => rtrim(base64_encode('secret'), '='),
                 ],
             ],
-            'default_connection' => ['id' => 'default-id', 'type' => 'EMAILIT'],
+            'default_connection' => [
+				'id' => 'default-id',
+				'type' => 'EMAILIT',
+			],
         ], false);
 
         ob_start();
@@ -140,6 +144,7 @@ final class ProviderAdminTest extends TestCase
         self::assertStringContainsString('Only one mail plugin should own live delivery at a time.', $output);
         self::assertStringContainsString('Analyze SureMail setup', $output);
         self::assertStringNotContainsString('deactivate', strtolower($output));
+        // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Encodes synthetic migration credentials for the tested legacy format; no executable payload.
         self::assertStringNotContainsString(rtrim(base64_encode('secret'), '='), $output);
     }
 
@@ -275,11 +280,11 @@ final class ProviderAdminTest extends TestCase
 
         self::assertNotEmpty($GLOBALS['wpdb']->updates);
 
-        $updatedConfig = json_decode((string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
+        $updatedConfig = json_decode( (string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
 
         self::assertIsArray($updatedConfig);
         self::assertSame('new.example.test', $updatedConfig['host']);
-        self::assertSame('existing-password', $vault->decrypt((string) $updatedConfig['password']));
+        self::assertSame('existing-password', $vault->decrypt( (string) $updatedConfig['password']));
         self::assertSame(5, $GLOBALS['wpdb']->updates[0]['data']['priority']);
         self::assertSame(3, $GLOBALS['wpdb']->updates[0]['data']['weight']);
         self::assertSame(1, $GLOBALS['wpdb']->updates[0]['data']['is_active']);
@@ -403,12 +408,12 @@ final class ProviderAdminTest extends TestCase
             self::assertSame('Aculect Mail provider admin redirected.', $e->getMessage());
         }
 
-        $updatedConfig = json_decode((string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
+        $updatedConfig = json_decode( (string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
 
         self::assertIsArray($updatedConfig);
         self::assertSame('new.example.test', $updatedConfig['host']);
         self::assertArrayHasKey('password', $updatedConfig);
-        self::assertTrue((new SecretVault())->isEncrypted((string) $updatedConfig['password']));
+        self::assertTrue((new SecretVault())->isEncrypted( (string) $updatedConfig['password']));
 
         $GLOBALS['wpdb']->providerRowsById[7]['config_json'] = (string) $GLOBALS['wpdb']->updates[0]['data']['config_json'];
 
@@ -460,12 +465,12 @@ final class ProviderAdminTest extends TestCase
             self::assertSame('Aculect Mail provider admin redirected.', $e->getMessage());
         }
 
-        $updatedConfig = json_decode((string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
+        $updatedConfig = json_decode( (string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
         $vault = new SecretVault();
 
         self::assertIsArray($updatedConfig);
         self::assertSame('new.example.test', $updatedConfig['host']);
-        self::assertSame('replacement-value', $vault->decrypt((string) $updatedConfig['password']));
+        self::assertSame('replacement-value', $vault->decrypt( (string) $updatedConfig['password']));
 
         $GLOBALS['wpdb']->providerRowsById[7]['config_json'] = (string) $GLOBALS['wpdb']->updates[0]['data']['config_json'];
 
@@ -498,6 +503,6 @@ final class ProviderAdminDnsResolver implements DnsResolverInterface
 
     public function txt(string $domain): array
     {
-        return $this->records[$domain] ?? [];
+        return $this->records[ $domain ] ?? [];
     }
 }

@@ -52,7 +52,7 @@ final class ConcurrencyIdempotencyTest extends TestCase
             'id' => 321,
             'status' => 'retry_scheduled',
             'message_uuid' => 'msg-321',
-            'payload_json' => json_encode([
+            'payload_json' => wp_json_encode([
                 'to' => ['qa@example.com'],
                 'subject' => 'retry test',
                 'message' => 'hello',
@@ -96,9 +96,21 @@ final class ConcurrencyIdempotencyTest extends TestCase
 
         $providerId = $policy->chooseNextProvider(321, 4, [
             'providers' => [
-                ['id' => 100, 'is_active' => 1, 'priority' => 1],
-                ['id' => 200, 'is_active' => 1, 'priority' => 2],
-                ['id' => 300, 'is_active' => 1, 'priority' => 3],
+                [
+					'id' => 100,
+					'is_active' => 1,
+					'priority' => 1,
+				],
+                [
+					'id' => 200,
+					'is_active' => 1,
+					'priority' => 2,
+				],
+                [
+					'id' => 300,
+					'is_active' => 1,
+					'priority' => 3,
+				],
             ],
             'last_provider_id' => 100,
             'consecutive_failures_for_last_provider' => 2,

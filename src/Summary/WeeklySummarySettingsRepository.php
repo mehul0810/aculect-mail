@@ -18,7 +18,7 @@ final class WeeklySummarySettingsRepository
     public function get(): WeeklySummarySettings
     {
         $settings = $this->settings->getAll();
-        $summary = isset($settings[self::KEY]) && is_array($settings[self::KEY]) ? $settings[self::KEY] : [];
+        $summary = isset($settings[ self::KEY ]) && is_array($settings[ self::KEY ]) ? $settings[ self::KEY ] : [];
 
         return WeeklySummarySettings::fromArray($summary);
     }
@@ -26,7 +26,7 @@ final class WeeklySummarySettingsRepository
     public function save(WeeklySummarySettings $summary): bool
     {
         $settings = $this->settings->getAll();
-        $settings[self::KEY] = $summary->toArray();
+        $settings[ self::KEY ] = $summary->toArray();
 
         return $this->settings->save($settings, 'onesmtp_settings_nonce');
     }

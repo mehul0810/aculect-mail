@@ -16,19 +16,20 @@ final class RetentionPruner
     public function registerHooks(): void
     {
         add_action(self::ACTION_HOOK, [$this, 'prune']);
-        $this->schedule();
+        // Action Scheduler initializes its store at init priority 1.
+        add_action('init', [$this, 'schedule']);
     }
 
     public function schedule(): void
     {
         if (function_exists('as_next_scheduled_action') && function_exists('as_schedule_recurring_action')) {
-            if (! as_next_scheduled_action(self::ACTION_HOOK, [], self::GROUP)) {
+            if ( ! as_next_scheduled_action(self::ACTION_HOOK, [], self::GROUP)) {
                 as_schedule_recurring_action(time() + HOUR_IN_SECONDS, DAY_IN_SECONDS, self::ACTION_HOOK, [], self::GROUP);
             }
             return;
         }
 
-        if (! wp_next_scheduled(self::ACTION_HOOK)) {
+        if ( ! wp_next_scheduled(self::ACTION_HOOK)) {
             wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', self::ACTION_HOOK);
         }
     }
@@ -78,15 +79,15 @@ final class RetentionPruner
             $args  = array_merge($params, [$batchSize]);
             $sql   = $wpdb->prepare($query, ...$args);
 
-            if (! is_string($sql)) {
+            if ( ! is_string($sql)) {
                 break;
             }
 
             $deletedRows = $wpdb->query($sql);
-            if (! is_numeric($deletedRows) || (int) $deletedRows <= 0) {
+            if ( ! is_numeric($deletedRows) || (int) $deletedRows <= 0) {
                 break;
             }
-        } while ((int) $deletedRows === $batchSize);
+        } while ( (int) $deletedRows === $batchSize);
         // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
     }
 }

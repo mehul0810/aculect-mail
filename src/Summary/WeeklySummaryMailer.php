@@ -26,6 +26,7 @@ final class WeeklySummaryMailer
 
     public function registerHooks(): void
     {
+        // phpcs:ignore WordPress.WP.CronInterval.ChangeDetected -- registerSchedule() supplies the fixed WEEK_SECONDS interval (604800 seconds).
         add_filter('cron_schedules', [$this, 'registerSchedule']);
         add_action('init', [$this, 'syncSchedule']);
         add_action(self::HOOK, [$this, 'sendScheduledSummary']);
@@ -33,7 +34,7 @@ final class WeeklySummaryMailer
 
     public function registerSchedule(array $schedules): array
     {
-        $schedules[self::RECURRENCE] = [
+        $schedules[ self::RECURRENCE ] = [
             'interval' => self::WEEK_SECONDS,
             'display' => __('Once Weekly', 'onesmtp'),
         ];
@@ -45,7 +46,7 @@ final class WeeklySummaryMailer
     {
         $settings = $this->settings->get();
 
-        if (! $settings->isEnabled()) {
+        if ( ! $settings->isEnabled()) {
             if (function_exists('wp_clear_scheduled_hook')) {
                 wp_clear_scheduled_hook(self::HOOK);
             }
@@ -63,7 +64,7 @@ final class WeeklySummaryMailer
     public function sendScheduledSummary(): bool
     {
         $settings = $this->settings->get();
-        if (! $settings->isEnabled()) {
+        if ( ! $settings->isEnabled()) {
             return false;
         }
 
@@ -91,7 +92,7 @@ final class WeeklySummaryMailer
         return [
             'since' => $since,
             'generated_at' => gmdate('Y-m-d H:i:s'),
-            'site_name' => $this->redactor->redactText((string) get_bloginfo('name'), 120),
+            'site_name' => $this->redactor->redactText( (string) get_bloginfo('name'), 120),
             'activity' => $activity,
             'pending' => $pending,
             'providers' => array_map([$this, 'safeProviderRow'], $providers),
@@ -133,7 +134,7 @@ final class WeeklySummaryMailer
             $lines[] = '- No provider activity was logged in this window.';
         } else {
             foreach ($providers as $provider) {
-                if (! is_array($provider)) {
+                if ( ! is_array($provider)) {
                     continue;
                 }
 
@@ -148,7 +149,7 @@ final class WeeklySummaryMailer
                 );
             }
 
-            if (! empty($summary['provider_rows_truncated'])) {
+            if ( ! empty($summary['provider_rows_truncated'])) {
                 $lines[] = '- Additional provider rows were omitted to keep this summary bounded.';
             }
         }
@@ -177,8 +178,8 @@ final class WeeklySummaryMailer
     {
         return [
             'provider_id' => max(0, (int) ($row['provider_id'] ?? 0)),
-            'provider_name' => $this->redactor->redactText(sanitize_text_field((string) ($row['provider_name'] ?? 'Unknown provider')), 120),
-            'adapter_type' => sanitize_key((string) ($row['adapter_type'] ?? 'unknown')),
+            'provider_name' => $this->redactor->redactText(sanitize_text_field( (string) ($row['provider_name'] ?? 'Unknown provider')), 120),
+            'adapter_type' => sanitize_key( (string) ($row['adapter_type'] ?? 'unknown')),
             'sent_count' => max(0, (int) ($row['sent_count'] ?? 0)),
             'failed_count' => max(0, (int) ($row['failed_count'] ?? 0)),
             'retry_count' => max(0, (int) ($row['retry_count'] ?? 0)),

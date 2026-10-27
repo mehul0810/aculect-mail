@@ -12,7 +12,7 @@ final class BackgroundSendingSettings
 
     public static function fromArray(array $settings): self
     {
-        return new self(! empty($settings['enabled']));
+        return new self( ! empty($settings['enabled']));
     }
 
     public function toArray(): array

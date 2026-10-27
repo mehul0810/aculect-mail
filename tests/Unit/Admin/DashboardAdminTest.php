@@ -17,6 +17,7 @@ final class DashboardAdminTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $_GET = [];
 
         $GLOBALS['wpdb'] = new FakeWpdb();
         $GLOBALS['onesmtp_test_current_user_caps'] = [
@@ -34,13 +35,13 @@ final class DashboardAdminTest extends TestCase
 
     public function test_render_outputs_clear_empty_state_without_sensitive_fields(): void
     {
-        $GLOBALS['wpdb']->dashboardActivityRowsBySince[$this->sinceDaysAgo(1)] = [
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $this->sinceDaysAgo(1) ] = [
             'sent_count' => 0,
             'failed_count' => 0,
             'retry_count' => 0,
             'payload_json' => '{"message":"secret body","token":"secret-token"}',
         ];
-        $GLOBALS['wpdb']->dashboardActivityRowsBySince[$this->sinceDaysAgo(7)] = [
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $this->sinceDaysAgo(7) ] = [
             'sent_count' => 0,
             'failed_count' => 0,
             'retry_count' => 0,
@@ -62,24 +63,24 @@ final class DashboardAdminTest extends TestCase
         $lastWeek = $this->sinceDaysAgo(7);
         $longName = str_repeat('LongProviderName', 8);
 
-        $GLOBALS['wpdb']->dashboardActivityRowsBySince[$lastDay] = [
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $lastDay ] = [
             'sent_count' => 3,
             'failed_count' => 2,
             'retry_count' => 1,
         ];
-        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[$lastDay] = 1;
-        $GLOBALS['wpdb']->dashboardActivityRowsBySince[$lastWeek] = [
+        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[ $lastDay ] = 1;
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $lastWeek ] = [
             'sent_count' => 30,
             'failed_count' => 4,
             'retry_count' => 6,
         ];
-        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[$lastWeek] = 5;
+        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[ $lastWeek ] = 5;
         $GLOBALS['wpdb']->dashboardPendingRow = [
             'queued_count' => 2,
             'retry_scheduled_count' => 4,
             'retrying_count' => 1,
         ];
-        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[$lastWeek] = [
+        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[ $lastWeek ] = [
             [
                 'provider_id' => 10,
                 'provider_name' => $longName,
@@ -89,7 +90,7 @@ final class DashboardAdminTest extends TestCase
                 'retry_count' => 6,
             ],
         ];
-        $GLOBALS['wpdb']->dashboardProviderFailoverRowsBySince[$lastWeek] = [
+        $GLOBALS['wpdb']->dashboardProviderFailoverRowsBySince[ $lastWeek ] = [
             [
                 'provider_id' => 10,
                 'provider_name' => $longName,
@@ -101,9 +102,9 @@ final class DashboardAdminTest extends TestCase
         $html = $this->render();
 
         self::assertStringContainsString('Last 24 hours', $html);
-        self::assertStringContainsString('<td>3</td>', $html);
-        self::assertStringContainsString('<td>2</td>', $html);
-        self::assertStringContainsString('<td>1</td>', $html);
+        self::assertStringContainsString('<td data-label="Sent attempts">3</td>', $html);
+        self::assertStringContainsString('<td data-label="Failed attempts">2</td>', $html);
+        self::assertStringContainsString('<td data-label="Retry attempts">1</td>', $html);
         self::assertStringContainsString('Total pending</th><td>7</td>', $html);
         self::assertStringContainsString('Provider activity', $html);
         self::assertStringContainsString(esc_attr($longName), $html);
@@ -121,6 +122,40 @@ final class DashboardAdminTest extends TestCase
         $this->expectExceptionMessage('You do not have permission to view Aculect Mail dashboard metrics.');
 
         $this->render();
+    }
+
+    public function test_acceptance_uses_all_completed_attempts_and_the_selected_window(): void
+    {
+        $_GET['onesmtp_analytics_window'] = 'last_30_days';
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $this->sinceDaysAgo(7) ] = [
+			'sent_count' => 9,
+			'failed_count' => 1,
+			'retry_count' => 0,
+		];
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $this->sinceDaysAgo(30) ] = [
+			'sent_count' => 6,
+			'failed_count' => 2,
+			'retry_count' => 3,
+		];
+        $html = $this->render();
+        self::assertStringContainsString('<strong>75.0%</strong>', $html);
+        self::assertStringNotContainsString('<strong>90.0%</strong>', $html);
+        self::assertStringContainsString('value="last_30_days" selected="selected"', $html);
+        self::assertStringContainsString('Acceptance does not confirm inbox placement.', $html);
+        self::assertStringContainsString('<strong>6</strong>', $html);
+    }
+
+    public function test_selected_window_without_completed_attempts_reports_no_rate(): void
+    {
+        $_GET['onesmtp_analytics_window'] = 'last_24_hours';
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ $this->sinceDaysAgo(7) ] = [
+			'sent_count' => 6,
+			'failed_count' => 2,
+			'retry_count' => 3,
+		];
+        $html = $this->render();
+        self::assertStringContainsString('<strong>No data</strong>', $html);
+        self::assertStringNotContainsString('<strong>0.0%</strong>', $html);
     }
 
     private function render(): string

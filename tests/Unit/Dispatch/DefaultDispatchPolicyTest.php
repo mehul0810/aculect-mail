@@ -108,8 +108,18 @@ final class DefaultDispatchPolicyTest extends TestCase
 
         self::assertSame(202, $policy->chooseNextProvider(77, 1, [
             'providers' => [
-                ['id' => 101, 'priority' => 1, 'weight' => 1, 'is_active' => 1],
-                ['id' => 202, 'priority' => 2, 'weight' => 1, 'is_active' => 1],
+                [
+					'id' => 101,
+					'priority' => 1,
+					'weight' => 1,
+					'is_active' => 1,
+				],
+                [
+					'id' => 202,
+					'priority' => 2,
+					'weight' => 1,
+					'is_active' => 1,
+				],
             ],
             'routing_rules' => [
                 [
@@ -129,8 +139,18 @@ final class DefaultDispatchPolicyTest extends TestCase
 
         self::assertSame(101, $policy->chooseNextProvider(0, 1, [
             'providers' => [
-                ['id' => 101, 'priority' => 1, 'weight' => 1, 'is_active' => 1],
-                ['id' => 202, 'priority' => 2, 'weight' => 1, 'is_active' => 1],
+                [
+					'id' => 101,
+					'priority' => 1,
+					'weight' => 1,
+					'is_active' => 1,
+				],
+                [
+					'id' => 202,
+					'priority' => 2,
+					'weight' => 1,
+					'is_active' => 1,
+				],
             ],
             'routing_rules' => [
                 [
@@ -149,8 +169,18 @@ final class DefaultDispatchPolicyTest extends TestCase
         $policy = new DefaultDispatchPolicy();
 
         $providers = [
-            ['id' => 11, 'priority' => 1, 'weight' => 1, 'is_active' => 1],
-            ['id' => 22, 'priority' => 2, 'weight' => 3, 'is_active' => 1],
+            [
+				'id' => 11,
+				'priority' => 1,
+				'weight' => 1,
+				'is_active' => 1,
+			],
+            [
+				'id' => 22,
+				'priority' => 2,
+				'weight' => 3,
+				'is_active' => 1,
+			],
         ];
 
         self::assertSame(22, $policy->chooseNextProvider(1, 1, ['providers' => $providers]));
@@ -171,7 +201,12 @@ final class DefaultDispatchPolicyTest extends TestCase
                     'circuit_state' => 'open',
                     'circuit_until' => gmdate('Y-m-d H:i:s', time() + 300),
                 ],
-                ['id' => 22, 'priority' => 2, 'weight' => 1, 'is_active' => 1],
+                [
+					'id' => 22,
+					'priority' => 2,
+					'weight' => 1,
+					'is_active' => 1,
+				],
             ],
         ]));
 
@@ -185,7 +220,12 @@ final class DefaultDispatchPolicyTest extends TestCase
                     'circuit_state' => 'open',
                     'circuit_until' => gmdate('Y-m-d H:i:s', time() - 300),
                 ],
-                ['id' => 22, 'priority' => 2, 'weight' => 1, 'is_active' => 1],
+                [
+					'id' => 22,
+					'priority' => 2,
+					'weight' => 1,
+					'is_active' => 1,
+				],
             ],
         ]));
     }

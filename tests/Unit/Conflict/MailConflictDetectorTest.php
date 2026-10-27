@@ -21,7 +21,10 @@ final class MailConflictDetectorTest extends TestCase
     {
         $detector = new MailConflictDetector();
 
-        self::assertSame(['plugins' => [], 'hooks' => []], $detector->detect());
+        self::assertSame([
+			'plugins' => [],
+			'hooks' => [],
+		], $detector->detect());
     }
 
     public function test_detect_reports_known_active_mail_plugins_without_paths(): void
@@ -58,8 +61,10 @@ final class MailConflictDetectorTest extends TestCase
         $detector = new MailConflictDetector();
         $result = $detector->detect();
 
-        self::assertSame(['wp_mail' => 1, 'phpmailer_init' => 1], $result['hooks']);
+        self::assertSame([
+			'wp_mail' => 1,
+			'phpmailer_init' => 1,
+		], $result['hooks']);
         self::assertSame($callback, $GLOBALS['wp_filter']['phpmailer_init'][10]['external_callback']['function']);
     }
-
 }

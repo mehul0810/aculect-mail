@@ -17,12 +17,12 @@ final class ProviderTypesTest extends TestCase
         self::assertEqualsCanonicalizing(ProviderTypes::all(), array_keys($metadata));
 
         foreach (ProviderTypes::all() as $type) {
-            self::assertNotSame('', $metadata[$type]['label']);
-            self::assertNotSame('', $metadata[$type]['description']);
-            self::assertNotSame('', $metadata[$type]['icon']);
-            self::assertEqualsCanonicalizing($capabilities, array_keys($metadata[$type]['capabilities']));
+            self::assertNotSame('', $metadata[ $type ]['label']);
+            self::assertNotSame('', $metadata[ $type ]['description']);
+            self::assertNotSame('', $metadata[ $type ]['icon']);
+            self::assertEqualsCanonicalizing($capabilities, array_keys($metadata[ $type ]['capabilities']));
 
-            foreach ($metadata[$type]['capabilities'] as $available) {
+            foreach ($metadata[ $type ]['capabilities'] as $available) {
                 self::assertIsBool($available);
             }
         }
@@ -32,16 +32,16 @@ final class ProviderTypesTest extends TestCase
     {
         $metadata = ProviderTypes::metadata();
 
-        self::assertTrue($metadata[ProviderTypes::SMTP]['capabilities']['smtp']);
-        self::assertFalse($metadata[ProviderTypes::SMTP]['capabilities']['api_delivery']);
-        self::assertTrue($metadata[ProviderTypes::AMAZON_SES]['capabilities']['smtp']);
-        self::assertFalse($metadata[ProviderTypes::AMAZON_SES]['capabilities']['api_delivery']);
-        self::assertFalse($metadata[ProviderTypes::PHP_MAIL]['capabilities']['smtp']);
-        self::assertTrue($metadata[ProviderTypes::GMAIL]['capabilities']['oauth']);
+        self::assertTrue($metadata[ ProviderTypes::SMTP ]['capabilities']['smtp']);
+        self::assertFalse($metadata[ ProviderTypes::SMTP ]['capabilities']['api_delivery']);
+        self::assertTrue($metadata[ ProviderTypes::AMAZON_SES ]['capabilities']['smtp']);
+        self::assertFalse($metadata[ ProviderTypes::AMAZON_SES ]['capabilities']['api_delivery']);
+        self::assertFalse($metadata[ ProviderTypes::PHP_MAIL ]['capabilities']['smtp']);
+        self::assertTrue($metadata[ ProviderTypes::GMAIL ]['capabilities']['oauth']);
 
         foreach ([ProviderTypes::GMAIL, ProviderTypes::SENDGRID, ProviderTypes::POSTMARK, ProviderTypes::BREVO] as $type) {
-            self::assertTrue($metadata[$type]['capabilities']['api_delivery']);
-            self::assertTrue($metadata[$type]['capabilities']['provider_message_id']);
+            self::assertTrue($metadata[ $type ]['capabilities']['api_delivery']);
+            self::assertTrue($metadata[ $type ]['capabilities']['provider_message_id']);
         }
     }
 }

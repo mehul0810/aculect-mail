@@ -79,6 +79,6 @@ final class StaticDnsResolver implements DnsResolverInterface
 
     public function txt(string $domain): array
     {
-        return $this->records[$domain] ?? [];
+        return $this->records[ $domain ] ?? [];
     }
 }

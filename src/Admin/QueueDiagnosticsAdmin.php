@@ -29,16 +29,16 @@ final class QueueDiagnosticsAdmin
 
     public function handleRequest(): void
     {
-        if ((string) ($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
+        if ( (string) ($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
             return;
         }
 
-        $action = isset($_GET[self::ACTION_NAME]) ? sanitize_key(wp_unslash((string) $_GET[self::ACTION_NAME])) : '';
+        $action = isset($_GET[ self::ACTION_NAME ]) ? sanitize_key(wp_unslash( (string) $_GET[ self::ACTION_NAME ])) : '';
         if ($action !== self::DOWNLOAD_ACTION) {
             return;
         }
 
-        if (! Capabilities::canManage()) {
+        if ( ! Capabilities::canManage()) {
             wp_die(
                 esc_html__('You do not have permission to download Aculect Mail diagnostics.', 'onesmtp'),
                 esc_html__('Aculect Mail access denied', 'onesmtp'),
@@ -46,7 +46,7 @@ final class QueueDiagnosticsAdmin
             );
         }
 
-        $nonce = isset($_GET[self::NONCE_NAME]) ? sanitize_text_field(wp_unslash((string) $_GET[self::NONCE_NAME])) : '';
+        $nonce = isset($_GET[ self::NONCE_NAME ]) ? sanitize_text_field(wp_unslash( (string) $_GET[ self::NONCE_NAME ])) : '';
         if ($nonce === '' || ! wp_verify_nonce($nonce, self::DOWNLOAD_ACTION)) {
             wp_die(
                 esc_html__('The Aculect Mail diagnostic report link has expired. Refresh the page and try again.', 'onesmtp'),
@@ -57,7 +57,7 @@ final class QueueDiagnosticsAdmin
 
         $report = $this->reportGenerator->generate();
 
-        if (! headers_sent()) {
+        if ( ! headers_sent()) {
             header('Content-Type: application/json; charset=utf-8');
             header('Content-Disposition: attachment; filename=onesmtp-diagnostic-report.json');
             header('X-Content-Type-Options: nosniff');
@@ -91,23 +91,25 @@ final class QueueDiagnosticsAdmin
         echo '<tbody>';
         $this->renderRow(__('Scheduler availability', 'onesmtp'), (bool) $snapshot['scheduler_available'] ? __('Available', 'onesmtp') : __('Unavailable', 'onesmtp'));
         $this->renderRow(__('Queue status', 'onesmtp'), $this->formatStatus($status));
-        $this->renderRow(__('Queued messages', 'onesmtp'), (string) ((int) $snapshot['queued_count']));
-        $this->renderRow(__('Scheduled retries', 'onesmtp'), (string) ((int) $snapshot['retry_scheduled_count']));
-        $this->renderRow(__('Overdue retries', 'onesmtp'), (string) ((int) $snapshot['overdue_retry_count']));
-        $this->renderRow(__('Running retries', 'onesmtp'), (string) ((int) $snapshot['retrying_count']));
-        $this->renderRow(__('Failed messages', 'onesmtp'), (string) ((int) $snapshot['failed_count']));
+        $this->renderRow(__('Queued messages', 'onesmtp'), (string) ( (int) $snapshot['queued_count']));
+        $this->renderRow(__('Scheduled retries', 'onesmtp'), (string) ( (int) $snapshot['retry_scheduled_count']));
+        $this->renderRow(__('Overdue retries', 'onesmtp'), (string) ( (int) $snapshot['overdue_retry_count']));
+        $this->renderRow(__('Running retries', 'onesmtp'), (string) ( (int) $snapshot['retrying_count']));
+        $this->renderRow(__('Failed messages', 'onesmtp'), (string) ( (int) $snapshot['failed_count']));
         $this->renderRow(__('Next retry', 'onesmtp'), (string) ($snapshot['next_retry_at'] ?? __('None scheduled', 'onesmtp')));
         echo '</tbody>';
         echo '</table>';
 
         echo '<h3>' . esc_html__('Recommended recovery actions', 'onesmtp') . '</h3>';
         echo '<ul>';
-        foreach ((array) $snapshot['recommended_actions'] as $action) {
-            echo '<li>' . esc_html((string) $action) . '</li>';
+        foreach ( (array) $snapshot['recommended_actions'] as $action) {
+            echo '<li>' . esc_html( (string) $action) . '</li>';
         }
         echo '</ul>';
 
+        echo '<details class="onesmtp-report-details"><summary>' . esc_html__('Privacy-safe diagnostic report', 'onesmtp') . '</summary>';
         $this->renderReportSection();
+        echo '</details>';
     }
 
     private function renderRow(string $label, string $value): void
@@ -145,7 +147,7 @@ final class QueueDiagnosticsAdmin
         }
 
         $encoded = wp_json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        if (! is_string($encoded) || $encoded === '') {
+        if ( ! is_string($encoded) || $encoded === '') {
             echo '<div class="notice notice-warning inline"><p>' . esc_html__('The diagnostic report preview is empty.', 'onesmtp') . '</p></div>';
 
             return;

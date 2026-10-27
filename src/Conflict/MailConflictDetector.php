@@ -48,7 +48,7 @@ final class MailConflictDetector implements MailConflictDetectorInterface
     private function detectActivePlugins(): array
     {
         $active = get_option('active_plugins', []);
-        if (! is_array($active)) {
+        if ( ! is_array($active)) {
             $active = [];
         }
 
@@ -59,12 +59,12 @@ final class MailConflictDetector implements MailConflictDetectorInterface
 
         $plugins = [];
         foreach ($active as $pluginFile) {
-            if (! is_string($pluginFile)) {
+            if ( ! is_string($pluginFile)) {
                 continue;
             }
 
-            if (isset(self::KNOWN_MAIL_PLUGINS[$pluginFile])) {
-                $plugins[] = self::KNOWN_MAIL_PLUGINS[$pluginFile];
+            if (isset(self::KNOWN_MAIL_PLUGINS[ $pluginFile ])) {
+                $plugins[] = self::KNOWN_MAIL_PLUGINS[ $pluginFile ];
             }
         }
 
@@ -83,7 +83,7 @@ final class MailConflictDetector implements MailConflictDetectorInterface
         foreach (self::MAIL_HOOKS as $hookName) {
             $count = $this->countCallbacks($hookName);
             if ($count > 0) {
-                $hooks[$hookName] = $count;
+                $hooks[ $hookName ] = $count;
             }
         }
 
@@ -94,11 +94,11 @@ final class MailConflictDetector implements MailConflictDetectorInterface
     {
         global $wp_filter;
 
-        if (! isset($wp_filter[$hookName])) {
+        if ( ! isset($wp_filter[ $hookName ])) {
             return 0;
         }
 
-        $hook = $wp_filter[$hookName];
+        $hook = $wp_filter[ $hookName ];
         if (is_object($hook) && isset($hook->callbacks) && is_array($hook->callbacks)) {
             return $this->countCallbackGroups($hook->callbacks);
         }
@@ -117,7 +117,7 @@ final class MailConflictDetector implements MailConflictDetectorInterface
     {
         $count = 0;
         foreach ($groups as $callbacks) {
-            if (! is_array($callbacks)) {
+            if ( ! is_array($callbacks)) {
                 continue;
             }
 
@@ -127,7 +127,7 @@ final class MailConflictDetector implements MailConflictDetectorInterface
                     continue;
                 }
 
-                $count++;
+                ++$count;
             }
         }
 

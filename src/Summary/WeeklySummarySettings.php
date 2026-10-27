@@ -61,7 +61,7 @@ final class WeeklySummarySettings
             return preg_split('/[\r\n,]+/', $value) ?: [];
         }
 
-        if (! is_array($value)) {
+        if ( ! is_array($value)) {
             return [];
         }
 
@@ -82,7 +82,7 @@ final class WeeklySummarySettings
                 continue;
             }
 
-            if (! self::isValidEmail($email)) {
+            if ( ! self::isValidEmail($email)) {
                 throw new InvalidArgumentException('Weekly summary recipients must be valid email addresses.');
             }
 

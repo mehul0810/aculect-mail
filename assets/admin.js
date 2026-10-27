@@ -21,6 +21,12 @@
 		'onesmtp-tools': 'onesmtp-advanced',
 		'onesmtp-provider-tools': 'onesmtp-advanced',
 		'onesmtp-settings-advanced': 'onesmtp-advanced',
+		'onesmtp-settings-general': 'onesmtp-settings',
+		'onesmtp-settings-notifications': 'onesmtp-settings',
+		'onesmtp-advanced-delivery': 'onesmtp-advanced',
+		'onesmtp-advanced-privacy': 'onesmtp-advanced',
+		'onesmtp-advanced-transfer': 'onesmtp-advanced',
+		'onesmtp-advanced-diagnostics': 'onesmtp-advanced',
 	};
 
 	function resolveWorkspace() {
@@ -84,6 +90,10 @@
 		} );
 
 		root.setAttribute( 'data-onesmtp-workspaces-ready', 'true' );
+		const picker = root.querySelector( '[data-onesmtp-section-picker]' );
+		if ( picker ) {
+			picker.value = workspaceId;
+		}
 		document.dispatchEvent(
 			new CustomEvent( 'onesmtp:workspace-activated', {
 				detail: { workspaceId },
@@ -135,6 +145,15 @@
 
 	links.forEach( function ( link ) {
 		link.addEventListener( 'click', function ( event ) {
+			if (
+				event.button !== 0 ||
+				event.metaKey ||
+				event.ctrlKey ||
+				event.shiftKey ||
+				event.altKey
+			) {
+				return;
+			}
 			const workspaceId = link.dataset.onesmtpWorkspaceLink;
 			if (
 				! workspaceId ||
@@ -157,6 +176,18 @@
 			activateWorkspace( workspaceId, true );
 		} );
 	} );
+
+	root.querySelector( '[data-onesmtp-section-picker]' )?.addEventListener(
+		'change',
+		( event ) => {
+			const link = links.find(
+				( candidate ) =>
+					candidate.dataset.onesmtpWorkspaceLink ===
+					event.target.value
+			);
+			link?.click();
+		}
+	);
 
 	root.querySelectorAll( '[data-onesmtp-provider-type]' ).forEach(
 		function ( link ) {
@@ -184,4 +215,117 @@
 	window.addEventListener( 'popstate', function () {
 		activateWorkspace( resolveWorkspace(), true );
 	} );
+} )();
+
+// Subsections use ordinary links so every form remains reachable without JS.
+( function () {
+	'use strict';
+	const root = document.querySelector( '[data-onesmtp-workspaces]' );
+	if ( ! root ) {
+		return;
+	}
+	const groups = [
+		{
+			name: 'settings',
+			selector: '[data-onesmtp-settings-group]',
+			key: 'onesmtpSettingsGroup',
+			fallback: 'general',
+		},
+		{
+			name: 'advanced',
+			selector: '[data-onesmtp-advanced-group]',
+			key: 'onesmtpAdvancedGroup',
+			fallback: 'delivery',
+		},
+	];
+	const legacy = {
+		'onesmtp-diagnostics': 'diagnostics',
+		'onesmtp-alerts': 'diagnostics',
+		'onesmtp-provider-tools': 'diagnostics',
+	};
+	function syncGroups() {
+		const hash = window.location.hash.slice( 1 );
+		groups.forEach( ( group ) => {
+			const panels = Array.from(
+				root.querySelectorAll( group.selector )
+			);
+			const requested =
+				legacy[ hash ] ||
+				hash.replace( `onesmtp-${ group.name }-`, '' );
+			const active = panels.some(
+				( panel ) => panel.dataset[ group.key ] === requested
+			)
+				? requested
+				: group.fallback;
+			panels.forEach( ( panel ) => {
+				const portable =
+					group.name === 'advanced' &&
+					[ 'privacy', 'transfer' ].includes( active );
+				panel.hidden = portable
+					? ! [ 'privacy', 'transfer' ].includes(
+							panel.dataset[ group.key ]
+					  )
+					: panel.dataset[ group.key ] !== active;
+			} );
+			root.querySelectorAll(
+				`[data-onesmtp-subnav="${ group.name }"] a`
+			).forEach( ( link ) => {
+				if ( link.dataset.onesmtpSubtab === active ) {
+					link.setAttribute( 'aria-current', 'page' );
+				} else {
+					link.removeAttribute( 'aria-current' );
+				}
+			} );
+			const picker = root.querySelector(
+				`[data-onesmtp-subpicker="${ group.name }"]`
+			);
+			if ( picker ) {
+				picker.value = active;
+			}
+			if ( group.name === 'advanced' ) {
+				const layout = root.querySelector( '.onesmtp-advanced-layout' );
+				if ( layout ) {
+					layout.dataset.activeGroup = active;
+					const heading = root.querySelector(
+						'#onesmtp-advanced-heading'
+					);
+					if ( heading ) {
+						heading.textContent = layout.getAttribute(
+							`data-title-${ active }`
+						);
+					}
+				}
+			}
+		} );
+	}
+	root.querySelectorAll( '[data-onesmtp-subnav] a' ).forEach( ( link ) => {
+		link.addEventListener( 'click', ( event ) => {
+			if (
+				event.button !== 0 ||
+				event.metaKey ||
+				event.ctrlKey ||
+				event.shiftKey ||
+				event.altKey
+			) {
+				return;
+			}
+			event.preventDefault();
+			window.history.pushState( null, '', link.href );
+			syncGroups();
+		} );
+	} );
+	root.querySelectorAll( '[data-onesmtp-subpicker]' ).forEach( ( picker ) => {
+		picker.addEventListener( 'change', () => {
+			window.history.pushState(
+				null,
+				'',
+				`#onesmtp-${ picker.dataset.onesmtpSubpicker }-${ picker.value }`
+			);
+			syncGroups();
+		} );
+	} );
+	window.addEventListener( 'popstate', syncGroups );
+	window.addEventListener( 'hashchange', syncGroups );
+	document.addEventListener( 'onesmtp:workspace-activated', syncGroups );
+	syncGroups();
 } )();

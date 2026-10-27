@@ -17,13 +17,14 @@ final class MailSourceAttributor
      */
     public function withSource(array $mailArgs): array
     {
-        if (isset($mailArgs[self::PAYLOAD_KEY]) && is_array($mailArgs[self::PAYLOAD_KEY])) {
-            $mailArgs[self::PAYLOAD_KEY] = $this->normalize($mailArgs[self::PAYLOAD_KEY]);
+        if (isset($mailArgs[ self::PAYLOAD_KEY ]) && is_array($mailArgs[ self::PAYLOAD_KEY ])) {
+            $mailArgs[ self::PAYLOAD_KEY ] = $this->normalize($mailArgs[ self::PAYLOAD_KEY ]);
 
             return $mailArgs;
         }
 
-        $mailArgs[self::PAYLOAD_KEY] = $this->detectFromFrames(
+        $mailArgs[ self::PAYLOAD_KEY ] = $this->detectFromFrames(
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- Production source attribution uses a bounded trace without arguments; only normalized origin metadata is retained.
             debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, self::TRACE_LIMIT)
         );
 
@@ -38,11 +39,11 @@ final class MailSourceAttributor
     {
         $normalized = [];
         foreach (['type', 'fixture', 'origin', 'name', 'slug'] as $key) {
-            if (! isset($source[$key]) || ! is_scalar($source[$key])) {
+            if ( ! isset($source[ $key ]) || ! is_scalar($source[ $key ])) {
                 continue;
             }
 
-            $rawValue = (string) $source[$key];
+            $rawValue = (string) $source[ $key ];
             $value = $key === 'type' || $key === 'slug'
                 ? sanitize_key($rawValue)
                 : $this->sanitizeLabel($rawValue);
@@ -52,28 +53,28 @@ final class MailSourceAttributor
             }
 
             if ($value !== '') {
-                $normalized[$key] = $value;
+                $normalized[ $key ] = $value;
             }
         }
 
         if (isset($source['metadata']) && is_array($source['metadata'])) {
             $metadata = [];
             foreach ($source['metadata'] as $key => $value) {
-                if (! is_scalar($value)) {
+                if ( ! is_scalar($value)) {
                     continue;
                 }
 
-                $safeKey = sanitize_key((string) $key);
-                $safeValue = $this->sanitizeLabel((string) $value);
+                $safeKey = sanitize_key( (string) $key);
+                $safeValue = $this->sanitizeLabel( (string) $value);
                 if ($safeKey !== '' && $safeValue !== '') {
-                    $metadata[$safeKey] = $safeValue;
+                    $metadata[ $safeKey ] = $safeValue;
                 }
             }
 
             $normalized['metadata'] = $metadata;
         }
 
-        if (! isset($normalized['type'])) {
+        if ( ! isset($normalized['type'])) {
             $normalized['type'] = 'unknown';
         }
 
@@ -139,7 +140,7 @@ final class MailSourceAttributor
 
         $relative = ltrim(substr($file, strlen($baseDir)), '/');
         $firstSegment = strtok($relative, '/');
-        if (! is_string($firstSegment)) {
+        if ( ! is_string($firstSegment)) {
             return null;
         }
 
@@ -164,7 +165,7 @@ final class MailSourceAttributor
 
         $relative = ltrim(substr($file, strlen($baseDir)), '/');
         $firstSegment = strtok($relative, '/');
-        if (! is_string($firstSegment)) {
+        if ( ! is_string($firstSegment)) {
             return null;
         }
 
@@ -183,7 +184,7 @@ final class MailSourceAttributor
 
     private function isCorePath(string $file): bool
     {
-        $root = defined('ABSPATH') ? $this->normalizePath((string) constant('ABSPATH')) : '';
+        $root = defined('ABSPATH') ? $this->normalizePath( (string) constant('ABSPATH')) : '';
         if ($root !== '') {
             $root = rtrim($root, '/');
 
@@ -210,11 +211,11 @@ final class MailSourceAttributor
     private function pluginDir(): string
     {
         if (defined('WP_PLUGIN_DIR')) {
-            return rtrim($this->normalizePath((string) constant('WP_PLUGIN_DIR')), '/');
+            return rtrim($this->normalizePath( (string) constant('WP_PLUGIN_DIR')), '/');
         }
 
         if (defined('WP_CONTENT_DIR')) {
-            return rtrim($this->normalizePath((string) constant('WP_CONTENT_DIR')), '/') . '/plugins';
+            return rtrim($this->normalizePath( (string) constant('WP_CONTENT_DIR')), '/') . '/plugins';
         }
 
         return '';
@@ -223,11 +224,11 @@ final class MailSourceAttributor
     private function muPluginDir(): string
     {
         if (defined('WPMU_PLUGIN_DIR')) {
-            return rtrim($this->normalizePath((string) constant('WPMU_PLUGIN_DIR')), '/');
+            return rtrim($this->normalizePath( (string) constant('WPMU_PLUGIN_DIR')), '/');
         }
 
         if (defined('WP_CONTENT_DIR')) {
-            return rtrim($this->normalizePath((string) constant('WP_CONTENT_DIR')), '/') . '/mu-plugins';
+            return rtrim($this->normalizePath( (string) constant('WP_CONTENT_DIR')), '/') . '/mu-plugins';
         }
 
         return '';
@@ -243,7 +244,7 @@ final class MailSourceAttributor
         }
 
         if (defined('WP_CONTENT_DIR')) {
-            return rtrim($this->normalizePath((string) constant('WP_CONTENT_DIR')), '/') . '/themes';
+            return rtrim($this->normalizePath( (string) constant('WP_CONTENT_DIR')), '/') . '/themes';
         }
 
         return '';

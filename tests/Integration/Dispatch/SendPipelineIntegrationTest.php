@@ -79,8 +79,16 @@ final class SendPipelineIntegrationTest extends TestCase
     public function test_retryable_failure_immediately_switches_to_secondary_provider_and_logs_failover(): void
     {
         $this->seedProviders([
-            ['id' => 10, 'adapter_type' => 'sequence', 'priority' => 1],
-            ['id' => 20, 'adapter_type' => 'sequence', 'priority' => 2],
+            [
+				'id' => 10,
+				'adapter_type' => 'sequence',
+				'priority' => 1,
+			],
+            [
+				'id' => 20,
+				'adapter_type' => 'sequence',
+				'priority' => 2,
+			],
         ]);
         $adapter = new SequenceAdapter('sequence', [
             new SendResult(false, 'provider_timeout', 'Primary timed out.', null, FailureCategory::TIMEOUT),
@@ -112,7 +120,7 @@ final class SendPipelineIntegrationTest extends TestCase
         $failover = $this->findEventInsert('provider_failover');
         self::assertNotNull($failover);
         self::assertSame(10, $failover['data']['provider_id']);
-        $context = json_decode((string) $failover['data']['context_json'], true);
+        $context = json_decode( (string) $failover['data']['context_json'], true);
         self::assertSame(20, $context['from_provider_id'] ?? null);
         self::assertSame(10, $context['to_provider_id'] ?? null);
     }
@@ -120,9 +128,21 @@ final class SendPipelineIntegrationTest extends TestCase
     public function test_provider_scoped_failure_on_secondary_continues_to_third_provider(): void
     {
         $this->seedProviders([
-            ['id' => 10, 'adapter_type' => 'sequence', 'priority' => 1],
-            ['id' => 20, 'adapter_type' => 'sequence', 'priority' => 2],
-            ['id' => 30, 'adapter_type' => 'sequence', 'priority' => 3],
+            [
+				'id' => 10,
+				'adapter_type' => 'sequence',
+				'priority' => 1,
+			],
+            [
+				'id' => 20,
+				'adapter_type' => 'sequence',
+				'priority' => 2,
+			],
+            [
+				'id' => 30,
+				'adapter_type' => 'sequence',
+				'priority' => 3,
+			],
         ]);
         $adapter = new SequenceAdapter('sequence', [
             new SendResult(false, 'provider_timeout', 'Primary timed out.', null, FailureCategory::TIMEOUT),
@@ -186,7 +206,7 @@ final class SendPipelineIntegrationTest extends TestCase
             ],
         ], false);
         $since = gmdate('Y-m-d H:i:s', 1782302400 - 60);
-        $GLOBALS['wpdb']->successfulSendWindowStatsBySince[$since] = [
+        $GLOBALS['wpdb']->successfulSendWindowStatsBySince[ $since ] = [
             'sent_count' => 1,
             'oldest_created_at' => gmdate('Y-m-d H:i:s', 1782302400 - 50),
         ];
@@ -219,7 +239,7 @@ final class SendPipelineIntegrationTest extends TestCase
 
         $deferredEvent = $this->findEventInsert('rate_limit_deferred');
         self::assertNotNull($deferredEvent);
-        $context = json_decode((string) $deferredEvent['data']['context_json'], true);
+        $context = json_decode( (string) $deferredEvent['data']['context_json'], true);
         self::assertSame('minute', $context['window'] ?? null);
         self::assertSame(10, $context['retry_after'] ?? null);
     }
@@ -254,7 +274,7 @@ final class SendPipelineIntegrationTest extends TestCase
 
         $event = $this->findEventInsert('background_send_queued');
         self::assertNotNull($event);
-        $context = json_decode((string) $event['data']['context_json'], true);
+        $context = json_decode( (string) $event['data']['context_json'], true);
         self::assertSame(1, $context['attempt'] ?? null);
         self::assertStringNotContainsString('qa@example.com', (string) $event['data']['context_json']);
         self::assertStringNotContainsString('Hello', (string) $event['data']['context_json']);
@@ -320,7 +340,7 @@ final class SendPipelineIntegrationTest extends TestCase
 
         $terminalEvent = $this->findEventInsert('terminal_failure');
         self::assertNotNull($terminalEvent);
-        $context = json_decode((string) $terminalEvent['data']['context_json'], true);
+        $context = json_decode( (string) $terminalEvent['data']['context_json'], true);
         self::assertSame('missing_api_key', $context['reason'] ?? null);
         self::assertSame(FailureCategory::AUTHENTICATION, $context['failure_category'] ?? null);
     }
@@ -413,7 +433,13 @@ final class SendPipelineIntegrationTest extends TestCase
             'max_attempts' => 6,
         ];
         $GLOBALS['wpdb']->attemptHistoryByMessage[501] = [
-            ['id' => 1, 'message_id' => 501, 'attempt_no' => 1, 'provider_id' => 30, 'result' => 'fail'],
+            [
+				'id' => 1,
+				'message_id' => 501,
+				'attempt_no' => 1,
+				'provider_id' => 30,
+				'result' => 'fail',
+			],
         ];
 
         $pipeline = $this->buildPipeline(new StaticAdapter('test_resend', new SendResult(true, 'sent', 'resent', 'provider-resend-123')));
@@ -598,7 +624,7 @@ final class SendPipelineIntegrationTest extends TestCase
         ];
 
         $GLOBALS['wpdb']->activeProviders = [$provider];
-        $GLOBALS['wpdb']->providerRowsById[$id] = $provider;
+        $GLOBALS['wpdb']->providerRowsById[ $id ] = $provider;
     }
 
     /** @param array<int,array{id:int,adapter_type:string,priority:int}> $providers */
@@ -612,7 +638,7 @@ final class SendPipelineIntegrationTest extends TestCase
                 'config_json' => '{}',
             ];
             $GLOBALS['wpdb']->activeProviders[] = $row;
-            $GLOBALS['wpdb']->providerRowsById[(int) $row['id']] = $row;
+            $GLOBALS['wpdb']->providerRowsById[ (int) $row['id'] ] = $row;
         }
     }
 
@@ -691,7 +717,7 @@ final class CountingAdapter extends StaticAdapter
 
     public function send(array $message, ProviderConfig $config): SendResult
     {
-        $this->sendCount++;
+        ++$this->sendCount;
 
         return parent::send($message, $config);
     }
@@ -713,8 +739,8 @@ final class SequenceAdapter implements ProviderAdapterInterface
 
     public function send(array $message, ProviderConfig $config): SendResult
     {
-        $result = $this->results[min($this->index, count($this->results) - 1)];
-        $this->index++;
+        $result = $this->results[ min($this->index, count($this->results) - 1) ];
+        ++$this->index;
 
         return $result;
     }

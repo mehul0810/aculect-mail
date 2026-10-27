@@ -32,7 +32,7 @@ final class DiagnosticsCommand
 
     public static function register(?self $command = null): void
     {
-        if (! self::isWpCliAvailable()) {
+        if ( ! self::isWpCliAvailable()) {
             return;
         }
 
@@ -122,7 +122,7 @@ final class DiagnosticsCommand
                         'queue_status' => (string) ($report['queue']['queue_status'] ?? ''),
                         'scheduler_available' => (bool) ($report['queue']['scheduler_available'] ?? false),
                         'overdue_retry_count' => (int) ($report['queue']['overdue_retry_count'] ?? 0),
-                        'failure_category_count' => count((array) ($report['recent_failures']['categories'] ?? [])),
+                        'failure_category_count' => count( (array) ($report['recent_failures']['categories'] ?? [])),
                         'redaction_status' => (string) ($report['redaction']['status'] ?? ''),
                     ],
                 ],
@@ -257,9 +257,9 @@ final class DiagnosticsCommand
      */
     private function format(array $assocArgs): string
     {
-        $format = isset($assocArgs['format']) ? sanitize_key((string) $assocArgs['format']) : self::FORMAT_JSON;
+        $format = isset($assocArgs['format']) ? sanitize_key( (string) $assocArgs['format']) : self::FORMAT_JSON;
 
-        if (! in_array($format, [self::FORMAT_JSON, self::FORMAT_TABLE], true)) {
+        if ( ! in_array($format, [self::FORMAT_JSON, self::FORMAT_TABLE], true)) {
             \WP_CLI::error('Invalid Aculect Mail diagnostics format. Use json or table.');
         }
 
@@ -271,9 +271,9 @@ final class DiagnosticsCommand
      */
     private function section(array $assocArgs): string
     {
-        $section = isset($assocArgs['section']) ? sanitize_key((string) $assocArgs['section']) : 'report';
+        $section = isset($assocArgs['section']) ? sanitize_key( (string) $assocArgs['section']) : 'report';
 
-        if (! in_array($section, ['report', 'providers', 'queue', 'failures'], true)) {
+        if ( ! in_array($section, ['report', 'providers', 'queue', 'failures'], true)) {
             \WP_CLI::error('Invalid Aculect Mail diagnostics section. Use report, providers, queue, or failures.');
         }
 
@@ -286,7 +286,7 @@ final class DiagnosticsCommand
     private function emitJson(mixed $data): void
     {
         $encoded = wp_json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        if (! is_string($encoded) || $encoded === '') {
+        if ( ! is_string($encoded) || $encoded === '') {
             \WP_CLI::error('Unable to encode Aculect Mail diagnostics output.');
         }
 
@@ -304,7 +304,7 @@ final class DiagnosticsCommand
         foreach ($rows as $row) {
             $values = [];
             foreach ($columns as $column) {
-                $values[] = $this->stringValue($row[$column] ?? null);
+                $values[] = $this->stringValue($row[ $column ] ?? null);
             }
 
             \WP_CLI::line(implode("\t", $values));

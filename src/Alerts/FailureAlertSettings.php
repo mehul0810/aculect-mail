@@ -91,7 +91,7 @@ final class FailureAlertSettings
             return preg_split('/[\r\n,]+/', $value) ?: [];
         }
 
-        if (! is_array($value)) {
+        if ( ! is_array($value)) {
             return [];
         }
 
@@ -112,7 +112,7 @@ final class FailureAlertSettings
                 continue;
             }
 
-            if (! self::isValidEmail($email)) {
+            if ( ! self::isValidEmail($email)) {
                 throw new InvalidArgumentException('Failure alert recipients must be valid email addresses.');
             }
 
@@ -134,7 +134,7 @@ final class FailureAlertSettings
         }
 
         $parts = wp_parse_url($url);
-        if (! is_array($parts) || strtolower((string) ($parts['scheme'] ?? '')) !== 'https' || empty($parts['host'])) {
+        if ( ! is_array($parts) || strtolower( (string) ($parts['scheme'] ?? '')) !== 'https' || empty($parts['host'])) {
             throw new InvalidArgumentException('Failure alert webhook URL must be a valid HTTPS URL.');
         }
 

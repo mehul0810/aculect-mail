@@ -46,7 +46,11 @@ final class FailureAlertPayloadBuilderTest extends TestCase
         ];
 
         $payload = (new FailureAlertPayloadBuilder())->build(
-            ['attempt' => 6, 'reason' => 'missing_api_key', 'failure_category' => 'authentication'],
+            [
+				'attempt' => 6,
+				'reason' => 'missing_api_key',
+				'failure_category' => 'authentication',
+			],
             44,
             9,
             123

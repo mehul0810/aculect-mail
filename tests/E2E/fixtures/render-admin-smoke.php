@@ -15,7 +15,7 @@ use OneSMTP\Tests\Support\FakeWpdb;
 
 $repoRoot = dirname(__DIR__, 3);
 
-if (! defined('ONESMTP_PATH')) {
+if ( ! defined('ONESMTP_PATH')) {
     define('ONESMTP_PATH', $repoRoot . '/');
 }
 
@@ -38,6 +38,12 @@ $GLOBALS['onesmtp_test_options'] = [
     ],
 ];
 $GLOBALS['onesmtp_test_object_cache'] = [];
+update_option('onesmtp_settings', [
+	'sender_identity' => [
+		'from_email' => 'sender@example.test',
+		'from_name' => 'Browser sender',
+	],
+], false);
 
 $provider = [
     'id' => 7,
@@ -183,7 +189,7 @@ $_POST = [];
 $_SERVER['REQUEST_METHOD'] = 'GET';
 
 $queue = new QueueDiagnostics(
-    new class extends ActionSchedulerHealth {
+    new class() extends ActionSchedulerHealth {
         public function isAvailable(): bool
         {
             return false;
@@ -218,15 +224,22 @@ echo '.notice-info{border-left-color:#72aee6}.notice-error{border-left-color:#d6
 echo '.regular-text{min-width:22rem}.large-text{width:100%}.button{cursor:pointer}';
 $adminStyles = $repoRoot . '/assets/admin.css';
 if (file_exists($adminStyles)) {
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local fixture renders trusted bundled CSS or already-escaped admin HTML; escaping would invalidate the fixture.
     echo file_get_contents($adminStyles);
 }
 echo '</style>';
 echo '</head><body>';
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Local fixture renders trusted bundled CSS or already-escaped admin HTML; escaping would invalidate the fixture.
 echo $body;
 echo '<script>';
 $adminScript = $repoRoot . '/assets/admin.js';
 if (file_exists($adminScript)) {
     echo file_get_contents($adminScript); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local fixture asset.
+}
+echo '</script><script>';
+$formsScript = $repoRoot . '/assets/admin-forms.js';
+if (file_exists($formsScript)) {
+    echo file_get_contents($formsScript); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local fixture asset.
 }
 echo '</script>';
 echo '</body></html>';

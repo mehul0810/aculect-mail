@@ -101,7 +101,7 @@ final class SenderIdentityApplier
             $headers = preg_split('/\r\n|\r|\n/', $headers) ?: [];
         }
 
-        if (! is_array($headers)) {
+        if ( ! is_array($headers)) {
             return [];
         }
 
@@ -170,7 +170,7 @@ final class SenderIdentityApplier
     {
         $value = trim(substr($header, strlen(self::HEADER_FROM) + 1));
         if (preg_match('/<([^>]+)>/', $value, $matches) === 1) {
-            return sanitize_email((string) $matches[1]);
+            return sanitize_email( (string) $matches[1]);
         }
 
         return sanitize_email($value);
@@ -180,11 +180,11 @@ final class SenderIdentityApplier
     {
         $value = trim(substr($header, strlen(self::HEADER_FROM) + 1));
         if (preg_match('/^"([^"]+)"/', $value, $matches) === 1) {
-            return sanitize_text_field((string) $matches[1]);
+            return sanitize_text_field( (string) $matches[1]);
         }
 
         if (preg_match('/^([^<]+)</', $value, $matches) === 1) {
-            return sanitize_text_field(trim((string) $matches[1], " \t\n\r\0\x0B\""));
+            return sanitize_text_field(trim( (string) $matches[1], " \t\n\r\0\x0B\""));
         }
 
         return '';

@@ -12,7 +12,7 @@ final class AttachmentLoggingSettings
 
     public static function fromArray(array $settings): self
     {
-        return new self(! empty($settings['enabled']));
+        return new self( ! empty($settings['enabled']));
     }
 
     public function isEnabled(): bool

@@ -35,3 +35,16 @@ Apply the Aculect tokens in [`DESIGN.md`](../../DESIGN.md) as a restrained layer
 ## Figma implementation evidence
 
 For a Figma-driven implementation, record the exact frame or node URL, capture the reference screenshot, identify the WordPress component equivalents, and verify the rendered result at desktop and narrow admin widths. If the Figma source cannot be fetched, do not claim pixel-level parity; use the documented WordPress and Aculect contracts and record the limitation.
+
+
+## Approved Pen implementation (October 2026)
+
+The implementation follows the 21 approved native PNG frames (14 desktop/foundation/state references and seven mobile references) from the saved Aculect Mail Pen handoff. WordPress continues to own the toolbar, sidebar and admin routing. The plugin does not reproduce the mock site's chrome, fixture values or review footers.
+
+`AdminUi`, `SettingsView` and `RoutingView` share escaped PHP presentation primitives. Existing repositories, permissions, nonces, provider adapters and handlers remain authoritative. Native forms and selectors handle the simple settings flows. The existing WordPress component island supplies the full-width provider editor through a portal; a PHP form remains available if the module cannot load. The optional provider analytics DataView loads when its disclosure opens and applies the package's sorting/filtering/pagination pipeline.
+
+The workspace loader tracks pending and mounted roots, allows failed imports to retry on re-entry, clears stale import-error text after recovery, and avoids duplicate mounting during interrupted navigation. Returning from a saved provider editor refreshes the PHP connection summary and restores focus to its catalog trigger. Forms retain actual disabled states, visible validation feedback, and explicit channel controls. The guided sender form updates only the name/address; the full Settings form owns the separate header overrides. Resend confirmation adds duplicate-delivery and attachment-limit guidance without changing server-side eligibility or nonce enforcement.
+
+The 1440px and 390px design anchors are also checked at 900px. Mobile tables become labeled cards, sender preview precedes its fields, and Advanced and main navigation use native selects. CSS remains scoped to Aculect classes and semantic tokens; no component library or dependency lock was added. Added outline paths come from Heroicons 2.2.0 under `assets/licenses/heroicons-MIT.txt`.
+
+Inter and IBM Plex Mono are named first in the font stacks. The handoff contains no font binaries; this implementation uses the existing system fallbacks without contacting a font CDN. This is a remaining typography difference from the design, not a claim of exact pixel parity.

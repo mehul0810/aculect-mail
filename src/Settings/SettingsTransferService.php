@@ -85,7 +85,7 @@ final class SettingsTransferService
         }
 
         $decoded = json_decode($json, true);
-        if (! is_array($decoded)) {
+        if ( ! is_array($decoded)) {
             throw new InvalidArgumentException('Import JSON must be a valid JSON object.');
         }
 
@@ -111,7 +111,7 @@ final class SettingsTransferService
         }
 
         if (is_array($settings) && array_key_exists('sender_identity', $settings)) {
-            if (! is_array($settings['sender_identity'])) {
+            if ( ! is_array($settings['sender_identity'])) {
                 throw new InvalidArgumentException('Sender identity settings must be a JSON object.');
             }
 
@@ -121,7 +121,7 @@ final class SettingsTransferService
         }
 
         if (is_array($settings) && array_key_exists('rate_limits', $settings)) {
-            if (! is_array($settings['rate_limits'])) {
+            if ( ! is_array($settings['rate_limits'])) {
                 throw new InvalidArgumentException('Rate limit settings must be a JSON object.');
             }
 
@@ -130,7 +130,7 @@ final class SettingsTransferService
         }
 
         if (is_array($settings) && array_key_exists('failure_alerts', $settings)) {
-            if (! is_array($settings['failure_alerts'])) {
+            if ( ! is_array($settings['failure_alerts'])) {
                 throw new InvalidArgumentException('Failure alert settings must be a JSON object.');
             }
 
@@ -140,7 +140,7 @@ final class SettingsTransferService
         }
 
         if (is_array($settings) && array_key_exists('background_sending', $settings)) {
-            if (! is_array($settings['background_sending'])) {
+            if ( ! is_array($settings['background_sending'])) {
                 throw new InvalidArgumentException('Background sending settings must be a JSON object.');
             }
 
@@ -149,7 +149,7 @@ final class SettingsTransferService
         }
 
         if (is_array($settings) && array_key_exists('attachment_logging', $settings)) {
-            if (! is_array($settings['attachment_logging'])) {
+            if ( ! is_array($settings['attachment_logging'])) {
                 throw new InvalidArgumentException('Attachment logging settings must be a JSON object.');
             }
 
@@ -158,7 +158,7 @@ final class SettingsTransferService
         }
 
         if (is_array($settings) && array_key_exists('weekly_summary', $settings)) {
-            if (! is_array($settings['weekly_summary'])) {
+            if ( ! is_array($settings['weekly_summary'])) {
                 throw new InvalidArgumentException('Weekly summary settings must be a JSON object.');
             }
 
@@ -188,7 +188,7 @@ final class SettingsTransferService
 
         foreach ($providerImports as $providerImport) {
             if ($this->providers->save($providerImport) > 0) {
-                $summary['providers_imported']++;
+                ++$summary['providers_imported'];
             }
         }
 
@@ -277,14 +277,14 @@ final class SettingsTransferService
         $exported = [];
 
         foreach ($this->providers->getAllSafe() as $provider) {
-            if (! is_array($provider)) {
+            if ( ! is_array($provider)) {
                 continue;
             }
 
             $exported[] = [
-                'slug' => sanitize_key((string) ($provider['slug'] ?? '')),
-                'name' => $this->safeText((string) ($provider['name'] ?? '')),
-                'adapter_type' => sanitize_key((string) ($provider['adapter_type'] ?? '')),
+                'slug' => sanitize_key( (string) ($provider['slug'] ?? '')),
+                'name' => $this->safeText( (string) ($provider['name'] ?? '')),
+                'adapter_type' => sanitize_key( (string) ($provider['adapter_type'] ?? '')),
                 'priority' => max(1, (int) ($provider['priority'] ?? 100)),
                 'weight' => max(1, (int) ($provider['weight'] ?? 1)),
                 'is_active' => ! empty($provider['is_active']),
@@ -304,12 +304,12 @@ final class SettingsTransferService
         $safe = [];
 
         foreach ($config as $key => $value) {
-            $key = sanitize_key((string) $key);
-            if (! isset(self::SAFE_PROVIDER_CONFIG_KEYS[$key]) || $this->isSensitiveKey($key) || ! is_scalar($value)) {
+            $key = sanitize_key( (string) $key);
+            if ( ! isset(self::SAFE_PROVIDER_CONFIG_KEYS[ $key ]) || $this->isSensitiveKey($key) || ! is_scalar($value)) {
                 continue;
             }
 
-            $safe[$key] = $this->safeText((string) $value);
+            $safe[ $key ] = $this->safeText( (string) $value);
         }
 
         return $safe;
@@ -334,12 +334,12 @@ final class SettingsTransferService
         $excluded = 0;
         foreach ($settings as $key => $value) {
             $key = (string) $key;
-            if (! isset($allowed[$key])) {
-                $excluded++;
+            if ( ! isset($allowed[ $key ])) {
+                ++$excluded;
                 continue;
             }
 
-            $safe[$key] = $value;
+            $safe[ $key ] = $value;
         }
 
         return [SenderIdentity::fromArray($safe)->toArray(), $excluded];
@@ -355,8 +355,8 @@ final class SettingsTransferService
         $excluded = 0;
 
         foreach ($settings as $key => $value) {
-            if ((string) $key !== 'throttle_seconds') {
-                $excluded++;
+            if ( (string) $key !== 'throttle_seconds') {
+                ++$excluded;
                 continue;
             }
 
@@ -376,8 +376,8 @@ final class SettingsTransferService
         $excluded = 0;
 
         foreach ($settings as $key => $value) {
-            if ((string) $key !== 'enabled') {
-                $excluded++;
+            if ( (string) $key !== 'enabled') {
+                ++$excluded;
                 continue;
             }
 
@@ -395,20 +395,20 @@ final class SettingsTransferService
     {
         $existingBySlug = [];
         foreach ($this->providers->getAll() as $existing) {
-            if (! is_array($existing)) {
+            if ( ! is_array($existing)) {
                 continue;
             }
 
-            $slug = sanitize_key((string) ($existing['slug'] ?? ''));
+            $slug = sanitize_key( (string) ($existing['slug'] ?? ''));
             if ($slug !== '') {
-                $existingBySlug[$slug] = (int) ($existing['id'] ?? 0);
+                $existingBySlug[ $slug ] = (int) ($existing['id'] ?? 0);
             }
         }
 
         $normalizedProviders = [];
         $excluded = 0;
         foreach ($providers as $provider) {
-            if (! is_array($provider)) {
+            if ( ! is_array($provider)) {
                 throw new InvalidArgumentException('Each provider import entry must be a JSON object.');
             }
 
@@ -427,12 +427,12 @@ final class SettingsTransferService
      */
     private function normalizeProviderImport(array $provider, array $existingBySlug): array
     {
-        $type = isset($provider['adapter_type']) ? sanitize_key((string) $provider['adapter_type']) : '';
-        if (! ProviderTypes::isSupported($type)) {
+        $type = isset($provider['adapter_type']) ? sanitize_key( (string) $provider['adapter_type']) : '';
+        if ( ! ProviderTypes::isSupported($type)) {
             throw new InvalidArgumentException('Provider type is not supported.');
         }
 
-        $slug = isset($provider['slug']) ? sanitize_key((string) $provider['slug']) : '';
+        $slug = isset($provider['slug']) ? sanitize_key( (string) $provider['slug']) : '';
         if ($slug === '') {
             $slug = $type . '_' . wp_generate_password(8, false);
         }
@@ -442,7 +442,7 @@ final class SettingsTransferService
 
         $normalized = [
             'slug' => $slug,
-            'name' => isset($provider['name']) ? $this->safeText((string) $provider['name']) : strtoupper($type),
+            'name' => isset($provider['name']) ? $this->safeText( (string) $provider['name']) : strtoupper($type),
             'adapter_type' => $type,
             'priority' => isset($provider['priority']) ? max(1, absint($provider['priority'])) : 100,
             'weight' => isset($provider['weight']) ? max(1, absint($provider['weight'])) : 1,
@@ -450,13 +450,13 @@ final class SettingsTransferService
             'config' => $safeConfig,
         ];
 
-        if (isset($existingBySlug[$slug]) && $existingBySlug[$slug] > 0) {
-            $normalized['id'] = $existingBySlug[$slug];
+        if (isset($existingBySlug[ $slug ]) && $existingBySlug[ $slug ] > 0) {
+            $normalized['id'] = $existingBySlug[ $slug ];
         }
 
         foreach ($provider as $key => $value) {
-            if (! in_array((string) $key, ['slug', 'name', 'adapter_type', 'priority', 'weight', 'is_active', 'config'], true)) {
-                $excluded++;
+            if ( ! in_array( (string) $key, ['slug', 'name', 'adapter_type', 'priority', 'weight', 'is_active', 'config'], true)) {
+                ++$excluded;
             }
         }
 
@@ -473,13 +473,13 @@ final class SettingsTransferService
         $excluded = 0;
 
         foreach ($config as $key => $value) {
-            $key = sanitize_key((string) $key);
-            if (! isset(self::SAFE_PROVIDER_CONFIG_KEYS[$key]) || $this->isSensitiveKey($key) || ! is_scalar($value)) {
-                $excluded++;
+            $key = sanitize_key( (string) $key);
+            if ( ! isset(self::SAFE_PROVIDER_CONFIG_KEYS[ $key ]) || $this->isSensitiveKey($key) || ! is_scalar($value)) {
+                ++$excluded;
                 continue;
             }
 
-            $safe[$key] = $this->safeText((string) $value);
+            $safe[ $key ] = $this->safeText( (string) $value);
         }
 
         return [$safe, $excluded];

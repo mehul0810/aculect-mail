@@ -85,7 +85,11 @@ final class RestControllerTest extends TestCase
         $this->setCurrentUserCaps([]);
         self::assertFalse($this->callPermissionCallback($operation['permission_callback']));
 
-        $this->setCurrentUserCaps(['read' => true, $requiredCapability => false, 'manage_options' => false]);
+        $this->setCurrentUserCaps([
+			'read' => true,
+			$requiredCapability => false,
+			'manage_options' => false,
+		]);
         self::assertFalse($this->callPermissionCallback($operation['permission_callback']));
     }
 
@@ -326,10 +330,10 @@ final class RestControllerTest extends TestCase
         self::assertCount(1, $GLOBALS['wpdb']->updates);
         self::assertSame('primary_smtp', $GLOBALS['wpdb']->updates[0]['data']['slug']);
 
-        $updatedConfig = json_decode((string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
+        $updatedConfig = json_decode( (string) $GLOBALS['wpdb']->updates[0]['data']['config_json'], true);
         self::assertIsArray($updatedConfig);
         self::assertSame('smtp.new.test', $updatedConfig['host']);
-        self::assertSame('existing-password', $vault->decrypt((string) $updatedConfig['password']));
+        self::assertSame('existing-password', $vault->decrypt( (string) $updatedConfig['password']));
         self::assertSame(5, $GLOBALS['wpdb']->updates[0]['data']['priority']);
         self::assertSame(2, $GLOBALS['wpdb']->updates[0]['data']['weight']);
         self::assertSame(1, $GLOBALS['wpdb']->updates[0]['data']['is_active']);
@@ -363,7 +367,11 @@ final class RestControllerTest extends TestCase
         );
 
         $request = new WP_REST_Request(
-            ['id' => 7, 'to' => 'recipient@example.test', 'subject' => '  Test <b>subject</b>  '],
+            [
+				'id' => 7,
+				'to' => 'recipient@example.test',
+				'subject' => '  Test <b>subject</b>  ',
+			],
             null
         );
 
@@ -412,7 +420,10 @@ final class RestControllerTest extends TestCase
             ],
         ], ['sendgrid' => $adapter]);
 
-        $response = $controller->testProvider(new WP_REST_Request(['id' => 8, 'to' => 'recipient@example.test'], null));
+        $response = $controller->testProvider(new WP_REST_Request([
+			'id' => 8,
+			'to' => 'recipient@example.test',
+		], null));
 
         self::assertSame(200, $response->status);
         self::assertTrue($response->data['ok']);
@@ -443,7 +454,10 @@ final class RestControllerTest extends TestCase
             ['sendgrid' => $adapter]
         );
 
-        $response = $controller->testProvider(new WP_REST_Request(['id' => 9, 'to' => 'recipient@example.test'], null));
+        $response = $controller->testProvider(new WP_REST_Request([
+			'id' => 9,
+			'to' => 'recipient@example.test',
+		], null));
 
         self::assertSame(422, $response->status);
         self::assertFalse($response->data['ok']);
@@ -472,15 +486,24 @@ final class RestControllerTest extends TestCase
             []
         );
 
-        $missing = $controller->testProvider(new WP_REST_Request(['id' => 99, 'to' => 'recipient@example.test'], null));
+        $missing = $controller->testProvider(new WP_REST_Request([
+			'id' => 99,
+			'to' => 'recipient@example.test',
+		], null));
         self::assertInstanceOf(WP_Error::class, $missing);
         self::assertSame('missing_provider', $missing->get_error_code());
 
-        $invalidRecipient = $controller->testProvider(new WP_REST_Request(['id' => 12, 'to' => 'not-an-email'], null));
+        $invalidRecipient = $controller->testProvider(new WP_REST_Request([
+			'id' => 12,
+			'to' => 'not-an-email',
+		], null));
         self::assertInstanceOf(WP_Error::class, $invalidRecipient);
         self::assertSame('invalid_test_recipient', $invalidRecipient->get_error_code());
 
-        $missingAdapter = $controller->testProvider(new WP_REST_Request(['id' => 12, 'to' => 'recipient@example.test'], null));
+        $missingAdapter = $controller->testProvider(new WP_REST_Request([
+			'id' => 12,
+			'to' => 'recipient@example.test',
+		], null));
         self::assertSame(422, $missingAdapter->status);
         self::assertFalse($missingAdapter->data['ok']);
         self::assertSame('adapter_missing', $missingAdapter->data['code']);
@@ -564,7 +587,7 @@ final class RestControllerTest extends TestCase
                 continue;
             }
 
-            return $registeredRoute['args'][$operationIndex];
+            return $registeredRoute['args'][ $operationIndex ];
         }
 
         self::fail(sprintf('REST route %s was not registered.', $route));

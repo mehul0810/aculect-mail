@@ -118,8 +118,8 @@ final class DiagnosticReportGenerator
     {
         return [
             'php_version' => PHP_VERSION,
-            'wordpress_version' => $this->redactor->redactText((string) get_bloginfo('version'), 40),
-            'site_name' => $this->redactor->redactText((string) get_bloginfo('name'), 120),
+            'wordpress_version' => $this->redactor->redactText( (string) get_bloginfo('version'), 40),
+            'site_name' => $this->redactor->redactText( (string) get_bloginfo('name'), 120),
             'multisite' => function_exists('is_multisite') ? (bool) is_multisite() : false,
             'wp_debug' => defined('WP_DEBUG') ? (bool) constant('WP_DEBUG') : false,
         ];
@@ -152,15 +152,15 @@ final class DiagnosticReportGenerator
     {
         return [
             'id' => (int) ($provider['id'] ?? 0),
-            'slug' => sanitize_key((string) ($provider['slug'] ?? '')),
-            'name' => $this->redactor->redactText(sanitize_text_field((string) ($provider['name'] ?? '')), 120),
-            'adapter_type' => sanitize_key((string) ($provider['adapter_type'] ?? '')),
+            'slug' => sanitize_key( (string) ($provider['slug'] ?? '')),
+            'name' => $this->redactor->redactText(sanitize_text_field( (string) ($provider['name'] ?? '')), 120),
+            'adapter_type' => sanitize_key( (string) ($provider['adapter_type'] ?? '')),
             'is_active' => (int) ($provider['is_active'] ?? 0) === 1,
             'priority' => (int) ($provider['priority'] ?? 100),
             'weight' => (int) ($provider['weight'] ?? 1),
-            'circuit_state' => sanitize_key((string) ($provider['circuit_state'] ?? 'closed')),
+            'circuit_state' => sanitize_key( (string) ($provider['circuit_state'] ?? 'closed')),
             'circuit_until' => isset($provider['circuit_until']) && (string) $provider['circuit_until'] !== ''
-                ? sanitize_text_field((string) $provider['circuit_until'])
+                ? sanitize_text_field( (string) $provider['circuit_until'])
                 : null,
             'config_values' => '[excluded]',
         ];

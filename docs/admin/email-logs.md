@@ -89,3 +89,10 @@ and do not enter the retry queue.
 
 - Default: 30 days
 - Extendable via filter: up to 120 days
+
+
+## Inspecting and resending
+
+Choose **Inspect** in Activity to open a message's attempt timeline and safe metadata. **Back to activity** returns to the list. On narrow screens, the main listing becomes cards without removing status, provider, attempt count or inspection actions.
+
+Manual resend keeps the existing permission and provider-eligibility checks. The confirmation explains the risk of duplicate delivery and that logged attachment metadata cannot restore original files. Cancelling returns keyboard focus to the resend action. Provider acceptance is not proof of inbox placement.

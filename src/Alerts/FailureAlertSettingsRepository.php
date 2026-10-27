@@ -18,7 +18,7 @@ final class FailureAlertSettingsRepository
     public function get(): FailureAlertSettings
     {
         $settings = $this->settings->getAll();
-        $alerts = isset($settings[self::KEY]) && is_array($settings[self::KEY]) ? $settings[self::KEY] : [];
+        $alerts = isset($settings[ self::KEY ]) && is_array($settings[ self::KEY ]) ? $settings[ self::KEY ] : [];
 
         return FailureAlertSettings::fromArray($alerts);
     }
@@ -26,7 +26,7 @@ final class FailureAlertSettingsRepository
     public function save(FailureAlertSettings $alerts): bool
     {
         $settings = $this->settings->getAll();
-        $settings[self::KEY] = $alerts->toArray();
+        $settings[ self::KEY ] = $alerts->toArray();
 
         return $this->settings->save($settings, 'onesmtp_settings_nonce');
     }

@@ -6,6 +6,16 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [0.3.0] - Unreleased
 
+### Fixed
+
+- Keep disabled notification fields and labels visibly muted after the shared field styles are applied.
+- Schedule log retention after Action Scheduler initializes its store, avoiding early scheduling and translation notices when the dependency is loaded.
+- Calculate provider acceptance from sent and failed attempts in the selected reporting window.
+- Preserve disabled notification recipients/endpoints and untouched sender overrides during guided setup.
+
+- Defer admin screen-label translation until rendering so plugin startup does not load the text domain before WordPress `init`.
+- Resolve the demonstrated changed-file PHP coding-standard findings while retaining scoped explanations for CLI fixtures and caller-validated request helpers.
+
 ### Added
 
 - Quiet in-product SureMail compatibility analysis and opt-in default-connection import, with inactive-by-default providers and AES-GCM credential re-encryption.
@@ -17,6 +27,9 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 - Internal smart-routing evaluator core for deterministic in-memory rule evaluation before default dispatch fallback.
 
 ### Changed
+
+- Apply the approved responsive Aculect Mail admin design: guided sender setup, connection catalog/editor, routing, message timelines, analytics, notification controls, and focused Advanced sections.
+- Add inline validation, mobile section selectors, explicit resend confirmation with focus return, and retryable lazy UI loading.
 
 - Provider Connect and Manage flows now advance from concise connection settings directly to an inline provider test email step.
 - Removed the global provider, retry scheduler, and mail-conflict admin notices; their underlying diagnostics remain available in the relevant admin workflows.

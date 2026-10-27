@@ -48,7 +48,7 @@ final class AttachmentLogSanitizerTest extends TestCase
                 '/srv/site/wp-content/uploads/Q2 revenue.xlsx',
             ],
         ]);
-        $log = $payload[AttachmentLogSanitizer::PAYLOAD_KEY] ?? [];
+        $log = $payload[ AttachmentLogSanitizer::PAYLOAD_KEY ] ?? [];
         $json = (string) wp_json_encode($payload);
 
         self::assertArrayNotHasKey('attachments', $payload);

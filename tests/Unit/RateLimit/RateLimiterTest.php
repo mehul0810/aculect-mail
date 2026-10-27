@@ -147,7 +147,7 @@ final class RateLimiterTest extends TestCase
     private function seedWindowStats(int $seconds, int $count, int $oldestAge): void
     {
         $since = gmdate('Y-m-d H:i:s', self::NOW - $seconds);
-        $GLOBALS['wpdb']->successfulSendWindowStatsBySince[$since] = [
+        $GLOBALS['wpdb']->successfulSendWindowStatsBySince[ $since ] = [
             'sent_count' => $count,
             'oldest_created_at' => gmdate('Y-m-d H:i:s', self::NOW - $oldestAge),
         ];

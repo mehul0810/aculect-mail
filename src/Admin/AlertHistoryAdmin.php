@@ -64,21 +64,12 @@ final class AlertHistoryAdmin
             return;
         }
 
-        echo '<table class="widefat striped">';
-        echo '<thead><tr>';
-        echo '<th scope="col">' . esc_html__('Event', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Status', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Summary', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Context', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Acknowledgement', 'onesmtp') . '</th>';
-        echo '</tr></thead>';
-        echo '<tbody>';
-
+        echo '<div class="onesmtp-alert-events">';
         foreach ($events as $event) {
             $this->renderEventRow($event);
         }
 
-        echo '</tbody></table>';
+        echo '</div><p>' . esc_html__('Acknowledgement records review; it does not resolve the delivery problem.', 'onesmtp') . '</p>';
     }
 
     /**
@@ -89,31 +80,19 @@ final class AlertHistoryAdmin
         $eventId = (int) ($event['id'] ?? 0);
         $status = sanitize_key( (string) ($event['status'] ?? 'open'));
 
-        echo '<tr>';
-        echo '<th scope="row">';
-        echo '<strong>#' . esc_html( (string) $eventId) . '</strong><br>';
-        echo esc_html(str_replace('_', ' ', (string) ($event['event_type'] ?? '')));
-        echo '<br><small>' . esc_html( (string) ($event['created_at'] ?? '')) . '</small>';
-        echo '</th>';
-        echo '<td>' . esc_html($status === 'acknowledged' ? __('Acknowledged', 'onesmtp') : __('Open', 'onesmtp')) . '</td>';
-        echo '<td>' . esc_html( (string) ($event['summary'] ?? '')) . '</td>';
+        echo '<article class="onesmtp-alert-event"><div class="onesmtp-panel-heading"><h4>#' . esc_html( (string) $eventId) . ' · ' . esc_html(str_replace('_', ' ', (string) ($event['event_type'] ?? ''))) . '</h4>';
+        AdminUi::badge($status === 'acknowledged' ? __('Acknowledged', 'onesmtp') : __('Open', 'onesmtp'), $status === 'acknowledged' ? 'neutral' : 'warning');
+        echo '</div><p>' . esc_html( (string) ($event['created_at'] ?? '')) . '</p><strong>' . esc_html( (string) ($event['summary'] ?? '')) . '</strong>';
+        echo '<details><summary>' . esc_html__('Safe event context', 'onesmtp') . '</summary>';
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- contextPreview() returns escaped readonly markup.
-        echo '<td>' . $this->contextPreview( (array) ($event['context'] ?? []), $eventId) . '</td>';
-        echo '<td>';
-
+        echo $this->contextPreview( (array) ($event['context'] ?? []), $eventId);
+        echo '</details>';
         if ($status === 'acknowledged') {
-            printf(
-                '%s<br><small>%s #%d</small>',
-                esc_html( (string) ($event['acknowledged_at'] ?? '')),
-                esc_html__('Actor', 'onesmtp'),
-                (int) ($event['acknowledged_by'] ?? 0)
-            );
+            echo '<p>' . esc_html( (string) ($event['acknowledged_at'] ?? '')) . ' · ' . esc_html__('Actor', 'onesmtp') . ' #' . esc_html( (string) (int) ($event['acknowledged_by'] ?? 0)) . '</p>';
         } else {
             $this->renderAcknowledgeForm($eventId);
         }
-
-        echo '</td>';
-        echo '</tr>';
+        echo '</article>';
     }
 
     /**
@@ -137,8 +116,8 @@ final class AlertHistoryAdmin
         echo '<form method="post" action="' . esc_url(admin_url('options-general.php?page=onesmtp&tab=onesmtp-advanced#onesmtp-alerts')) . '">';
         echo '<input type="hidden" name="' . esc_attr(self::ACTION_NAME) . '" value="' . esc_attr(self::ACKNOWLEDGE_ACTION) . '">';
         echo '<input type="hidden" name="' . esc_attr(self::EVENT_ID_NAME) . '" value="' . esc_attr( (string) $eventId) . '">';
-        wp_nonce_field($this->nonceAction($eventId), self::NONCE_NAME);
-        submit_button(__('Acknowledge', 'onesmtp'), 'secondary small', 'submit', false);
+        AdminUi::nonce($this->nonceAction($eventId), self::NONCE_NAME);
+        AdminUi::submit(__('Acknowledge', 'onesmtp'), 'secondary small', 'submit', false);
         echo '</form>';
     }
 

@@ -83,9 +83,9 @@ final class AdminAccessibilityMarkupTest extends TestCase
         self::assertStringContainsString('id="onesmtp-advanced"', $html);
         self::assertStringContainsString('id="onesmtp-provider-tools"', $html);
         self::assertStringContainsString('id="onesmtp-overview-heading" tabindex="-1"', $html);
-        self::assertStringContainsString('id="onesmtp-delivery" class="onesmtp-setup-shell is-simplified"', $html);
-        self::assertStringContainsString('data-onesmtp-component="sender-identity-drawer"', $html);
-        self::assertStringContainsString('data-onesmtp-drawer-trigger="sender-identity"', $html);
+        self::assertStringContainsString('id="onesmtp-delivery" class="onesmtp-setup-shell"', $html);
+        self::assertStringContainsString('id="onesmtp-setup-from_email"', $html);
+        self::assertStringContainsString('id="onesmtp-section-picker"', $html);
         self::assertStringContainsString('id="onesmtp-sender-identity-fallback"', $html);
     }
 
@@ -171,7 +171,10 @@ final class AdminAccessibilityMarkupTest extends TestCase
         $GLOBALS['wpdb']->messageRowsById[99] = [
             'id' => 99,
             'message_uuid' => 'lineage-99',
-            'payload_json' => wp_json_encode(['to' => 'person@example.net', 'message' => 'Private body']),
+            'payload_json' => wp_json_encode([
+				'to' => 'person@example.net',
+				'message' => 'Private body',
+			]),
             'status' => 'failed',
             'selected_provider_id' => 7,
             'current_attempt' => 2,
@@ -198,11 +201,21 @@ final class AdminAccessibilityMarkupTest extends TestCase
             ],
         ];
         $GLOBALS['wpdb']->activeProviders = [
-            ['id' => 7, 'name' => 'Primary SMTP', 'adapter_type' => 'smtp', 'is_active' => 1, 'priority' => 1, 'weight' => 1],
+            [
+				'id' => 7,
+				'name' => 'Primary SMTP',
+				'adapter_type' => 'smtp',
+				'is_active' => 1,
+				'priority' => 1,
+				'weight' => 1,
+			],
         ];
         $GLOBALS['wpdb']->providerRowsById[7] = $GLOBALS['wpdb']->activeProviders[0];
 
         $html = $this->capture(static fn () => (new LogAdmin(new MessageRepository(), new AttemptRepository(), new ProviderRepository()))->render());
+
+        unset($_GET['onesmtp_message_id']);
+        $html .= $this->capture(static fn () => (new LogAdmin(new MessageRepository(), new AttemptRepository(), new ProviderRepository()))->render());
 
         self::assertStringContainsString('<label for="onesmtp-log-status">Status</label>', $html);
         self::assertStringContainsString('<label for="onesmtp-log-provider">Provider</label>', $html);
@@ -213,11 +226,11 @@ final class AdminAccessibilityMarkupTest extends TestCase
         self::assertStringContainsString('aria-label="Next log page"', $html);
         self::assertStringContainsString('<th scope="col">Message</th>', $html);
         self::assertStringContainsString('<th scope="row"><a href=', $html);
-        self::assertStringContainsString('<th scope="col">Safe error context</th>', $html);
-        self::assertStringContainsString('<th scope="row">1</th>', $html);
+        self::assertStringContainsString('onesmtp-attempt-timeline', $html);
+        self::assertStringContainsString('Attempt 1', $html);
         self::assertStringContainsString('<label for="onesmtp-resend-provider">Provider override</label>', $html);
         self::assertStringContainsString('Resend message', $html);
-        self::assertStringContainsString('style="max-width:32em;white-space:normal;word-break:break-word;"', $html);
+        self::assertStringContainsString('aria-describedby="onesmtp-confirm-description"', $html);
         self::assertStringNotContainsString('Private body', $html);
         self::assertStringNotContainsString('person@example.net', $html);
     }
@@ -233,12 +246,12 @@ final class AdminAccessibilityMarkupTest extends TestCase
         self::assertStringContainsString('Connect a provider', $html);
         self::assertStringContainsString('onesmtp-setup-shell', $html);
         self::assertStringNotContainsString('onesmtp-setup-rail', $html);
-        self::assertStringContainsString('onesmtp-overview-setup-card', $html);
-        self::assertStringContainsString('data-onesmtp-component="settings-navigation"', $html);
-        self::assertStringContainsString('<label for="from_email">From Email</label>', $html);
-        self::assertStringContainsString('<legend>Force settings</legend>', $html);
-        self::assertStringContainsString('<label><input type="checkbox" name="failure_alert_email_enabled"', $html);
-        self::assertStringContainsString('Failure alerts are disabled until an email recipient or HTTPS webhook is enabled.', $html);
+        self::assertStringContainsString('onesmtp-setup-panel', $html);
+        self::assertStringContainsString('data-onesmtp-subnav="settings"', $html);
+        self::assertStringContainsString('<label for="onesmtp-field-from_email">From email', $html);
+        self::assertStringContainsString('Override existing email', $html);
+        self::assertStringContainsString('name="failure_alert_email_enabled"', $html);
+        self::assertStringContainsString('Enable email alerts to edit recipients.', $html);
         self::assertStringContainsString('<th scope="row">Scheduler availability</th>', $html);
         self::assertStringNotContainsString('secret-token', $html);
         self::assertStringNotContainsString('payload_json', $html);

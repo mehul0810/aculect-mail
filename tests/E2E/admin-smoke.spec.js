@@ -44,7 +44,7 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 		page,
 	} ) => {
 		await expect(
-			page.getByRole( 'heading', { name: 'Mail', exact: true } )
+			page.getByRole( 'heading', { name: 'Aculect Mail', exact: true } )
 		).toBeVisible();
 		await expect(
 			page.locator(
@@ -82,7 +82,7 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 			primaryNav.getByRole( 'link', { name: 'Overview', exact: true } )
 		).toHaveAttribute( 'aria-current', 'page' );
 		await expect( page.locator( '#onesmtp-overview' ) ).toContainText(
-			'Test email'
+			'Send a test'
 		);
 		await expect(
 			page.locator( '#onesmtp-overview .onesmtp-context-rail' )
@@ -237,10 +237,10 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 	} ) => {
 		await openWorkspace( page, 'Activity', 'onesmtp-activity' );
 		await expect( page.locator( '#onesmtp-activity' ) ).toContainText(
-			'Recent messages'
+			'Back to activity'
 		);
 		await expect( page.locator( '#onesmtp-activity' ) ).toContainText(
-			'Message detail'
+			'Safe metadata'
 		);
 		await expect( page.locator( '#onesmtp-activity' ) ).toContainText(
 			'Manual resend'
@@ -264,7 +264,7 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 
 		await openWorkspace( page, 'Advanced', 'onesmtp-advanced' );
 		const advanced = page.locator( '#onesmtp-advanced' );
-		await advanced.locator( 'details#onesmtp-diagnostics summary' ).click();
+		await advanced.locator( '[data-onesmtp-subtab="diagnostics"]' ).click();
 		await expect( advanced ).toContainText( 'Scheduler availability' );
 		await expect( advanced ).toContainText( 'Unavailable' );
 		await expect( advanced ).toContainText( 'Overdue retries' );
@@ -287,7 +287,7 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 		await openWorkspace( page, 'Advanced', 'onesmtp-advanced' );
 
 		const alerts = page.locator( '#onesmtp-advanced' );
-		await alerts.locator( 'details#onesmtp-alerts summary' ).click();
+		await alerts.locator( '[data-onesmtp-subtab="diagnostics"]' ).click();
 		await expect( alerts ).toContainText(
 			'Review privacy-safe alert events'
 		);
@@ -349,6 +349,146 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 			} );
 	} );
 
+	test( 'notification toggles disable fields and omit them from form submission', async ( {
+		page,
+	} ) => {
+		await captureFormSubmissions( page );
+		await openWorkspace( page, 'Settings', 'onesmtp-settings' );
+		await page
+			.getByRole( 'link', { name: 'Notifications', exact: true } )
+			.click();
+		const recipients = page.locator(
+			'[name="failure_alert_email_recipients"]'
+		);
+		const endpoint = page.locator( '[name="failure_alert_webhook_url"]' );
+		await expect( recipients ).toBeDisabled();
+		await expect( endpoint ).toBeDisabled();
+		for ( const field of [ recipients, endpoint ] ) {
+			await expect( field ).toHaveCSS(
+				'background-color',
+				'rgb(246, 247, 247)'
+			);
+			await expect( field.locator( '..' ).locator( 'label' ) ).toHaveCSS(
+				'color',
+				'rgb(100, 105, 112)'
+			);
+		}
+		await page
+			.getByRole( 'button', { name: 'Save failure alerts', exact: true } )
+			.click();
+		expect( await latestSubmission( page ) ).not.toHaveProperty(
+			'failure_alert_email_recipients'
+		);
+		await page.getByRole( 'switch', { name: /Email alerts/ } ).check();
+		await expect( recipients ).toBeEnabled();
+		await expect( recipients ).toHaveCSS(
+			'background-color',
+			'rgb(255, 255, 255)'
+		);
+		await recipients.fill( 'ops@example.test' );
+		await page
+			.getByRole( 'button', { name: 'Save failure alerts', exact: true } )
+			.click();
+		expect( await latestSubmission( page ) ).toMatchObject( {
+			failure_alert_email_recipients: 'ops@example.test',
+		} );
+	} );
+
+	test( 'invalid sender email announces unsaved state and stays on the form', async ( {
+		page,
+	} ) => {
+		await openWorkspace( page, 'Settings', 'onesmtp-settings' );
+		const email = page.locator( '#onesmtp-field-from_email' );
+		await email.fill( 'invalid-address' );
+		await page
+			.getByRole( 'button', {
+				name: 'Save sender identity',
+				exact: true,
+			} )
+			.click();
+		await expect( email ).toHaveAttribute( 'aria-invalid', 'true' );
+		await expect( email ).toBeFocused();
+		await expect( page.getByRole( 'alert' ) ).toContainText(
+			'Changes have not been saved'
+		);
+		await email.fill( 'sender@example.test' );
+		await expect( email ).not.toHaveAttribute( 'aria-invalid', 'true' );
+	} );
+
+	test( 'resend confirmation cancels safely and returns keyboard focus', async ( {
+		page,
+	} ) => {
+		await openWorkspace( page, 'Activity', 'onesmtp-activity' );
+		const resend = page.getByRole( 'button', {
+			name: 'Resend message',
+			exact: true,
+		} );
+		await resend.click();
+		await expect( page.getByRole( 'dialog' ) ).toBeVisible();
+		await expect( page.getByRole( 'dialog' ) ).toContainText(
+			'duplicate delivery'
+		);
+		await expect(
+			page.getByRole( 'button', { name: 'Cancel', exact: true } )
+		).toBeFocused();
+		await page.keyboard.press( 'Escape' );
+		await expect( page.getByRole( 'dialog' ) ).toBeHidden();
+		await expect( resend ).toBeFocused();
+		const posts = [];
+		page.on( 'request', ( request ) => {
+			if ( request.method() === 'POST' ) {
+				posts.push( request );
+			}
+		} );
+		await resend.click();
+		const submission = page.waitForRequest(
+			( request ) => request.method() === 'POST'
+		);
+		await page
+			.getByRole( 'button', { name: 'Confirm resend', exact: true } )
+			.click();
+		const request = await submission;
+		expect(
+			new URLSearchParams( request.postData() ).get(
+				'onesmtp_log_action'
+			)
+		).toBe( 'resend' );
+		expect( posts ).toHaveLength( 1 );
+	} );
+
+	test( 'provider search has empty recovery and navigation survives repeated history changes', async ( {
+		page,
+	} ) => {
+		await openWorkspace( page, 'Providers', 'onesmtp-providers' );
+		const search = page.getByRole( 'searchbox', {
+			name: 'Find a provider',
+		} );
+		await search.fill( 'No such provider' );
+		await expect(
+			page.getByText( 'No providers match your search.', {
+				exact: false,
+			} )
+		).toBeVisible();
+		await page
+			.getByRole( 'button', { name: 'Clear search', exact: true } )
+			.click();
+		await expect( search ).toBeFocused();
+		await expect(
+			page.locator( '[data-provider-type]:visible' )
+		).toHaveCount( 19 );
+		for ( let i = 0; i < 3; i++ ) {
+			await openWorkspace( page, 'Settings', 'onesmtp-settings' );
+			await page
+				.getByRole( 'link', { name: 'Notifications', exact: true } )
+				.click();
+			await openWorkspace( page, 'Providers', 'onesmtp-providers' );
+			await page.goBack();
+			await expect(
+				page.locator( '[data-onesmtp-settings-group="notifications"]' )
+			).toBeVisible();
+		}
+	} );
+
 	test( 'keeps the active workspace within a mobile admin viewport', async ( {
 		page,
 	} ) => {
@@ -385,10 +525,14 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 } );
 
 async function openWorkspace( page, label, id ) {
-	await page
-		.locator( '.nav-tab-wrapper' )
-		.getByRole( 'link', { name: label, exact: true } )
-		.click();
+	if ( await page.locator( '#onesmtp-section-picker' ).isVisible() ) {
+		await page.locator( '#onesmtp-section-picker' ).selectOption( id );
+	} else {
+		await page
+			.locator( '.nav-tab-wrapper' )
+			.getByRole( 'link', { name: label, exact: true } )
+			.click();
+	}
 	await expect( page ).toHaveURL( new RegExp( `[?&]tab=${ id }#${ id }$` ) );
 	await expect( page.locator( `#${ id }` ) ).toBeVisible();
 }

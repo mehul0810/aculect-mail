@@ -41,11 +41,11 @@ final class MailSourceAttributorTest extends TestCase
     {
         $attributor = new MailSourceAttributor();
 
-        if (! defined('WP_CONTENT_DIR')) {
+        if ( ! defined('WP_CONTENT_DIR')) {
             define('WP_CONTENT_DIR', '/var/www/wp-content');
         }
 
-        if (! defined('ABSPATH')) {
+        if ( ! defined('ABSPATH')) {
             define('ABSPATH', '/var/www/');
         }
 

@@ -11,6 +11,8 @@ use OneSMTP\Tests\Support\FakeWpdb;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
+require_once __DIR__ . '/../../Support/AdminTranslationSpy.php';
+
 final class AdminPageTest extends TestCase
 {
     protected function setUp(): void
@@ -35,6 +37,34 @@ final class AdminPageTest extends TestCase
 
         self::assertSame('admin_menu', $GLOBALS['onesmtp_test_actions'][0]['hook']);
         self::assertSame([$page, 'registerMenu'], $GLOBALS['onesmtp_test_actions'][0]['callback']);
+    }
+
+    public function test_screen_labels_are_translated_when_rendered_not_during_bootstrap(): void
+    {
+        $GLOBALS['onesmtp_test_translations'] = [];
+
+        try {
+            $page = new AdminPage();
+            $page->registerHooks();
+
+            self::assertSame([], $GLOBALS['onesmtp_test_translations']);
+
+            ob_start();
+            try {
+                $page->render();
+                $output = (string) ob_get_contents();
+            } finally {
+                ob_end_clean();
+            }
+
+            self::assertContains([
+				'text' => 'Overview',
+				'domain' => 'onesmtp',
+			], $GLOBALS['onesmtp_test_translations']);
+            self::assertStringContainsString('Overview', $output);
+        } finally {
+            unset($GLOBALS['onesmtp_test_translations']);
+        }
     }
 
     public function test_plugin_boot_registers_admin_menu_hook(): void
@@ -108,14 +138,14 @@ final class AdminPageTest extends TestCase
         self::assertStringContainsString('onesmtp-admin-header', $output);
         self::assertStringContainsString('assets/images/aculect-icon-light.svg', $output);
         self::assertStringContainsString('class="onesmtp-admin-brand-mark" aria-hidden="true"><img', $output);
-        self::assertStringContainsString('<h1>Mail</h1>', $output);
-        self::assertStringContainsString('onesmtp-overview-setup-card', $output);
+        self::assertStringContainsString('<h1>Aculect Mail</h1>', $output);
+        self::assertStringContainsString('onesmtp-setup-panel', $output);
         self::assertStringNotContainsString('onesmtp-overview-side-card', $output);
         self::assertStringContainsString('data-onesmtp-workspace-link="onesmtp-overview"', $output);
         self::assertStringContainsString('nav-tab nav-tab-active', $output);
         self::assertStringContainsString('aria-current="page"', $output);
         self::assertStringContainsString('id="onesmtp-overview"', $output);
-        self::assertStringContainsString('Reliable email delivery for WordPress.', $output);
+        self::assertStringContainsString('WordPress email operations', $output);
         self::assertStringContainsString('Setup needed', $output);
         self::assertStringContainsString('Overview', $output);
         self::assertStringContainsString('Routing', $output);

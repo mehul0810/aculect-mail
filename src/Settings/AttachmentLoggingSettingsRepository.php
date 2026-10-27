@@ -16,7 +16,7 @@ final class AttachmentLoggingSettingsRepository
     public function get(): AttachmentLoggingSettings
     {
         $settings = $this->settings->getAll();
-        $attachmentLogging = isset($settings[self::KEY]) && is_array($settings[self::KEY]) ? $settings[self::KEY] : [];
+        $attachmentLogging = isset($settings[ self::KEY ]) && is_array($settings[ self::KEY ]) ? $settings[ self::KEY ] : [];
 
         return AttachmentLoggingSettings::fromArray($attachmentLogging);
     }
@@ -24,7 +24,7 @@ final class AttachmentLoggingSettingsRepository
     public function save(AttachmentLoggingSettings $attachmentLogging): bool
     {
         $settings = $this->settings->getAll();
-        $settings[self::KEY] = $attachmentLogging->toArray();
+        $settings[ self::KEY ] = $attachmentLogging->toArray();
 
         return $this->settings->save($settings, 'onesmtp_settings_nonce');
     }

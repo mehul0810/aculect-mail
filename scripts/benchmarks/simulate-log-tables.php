@@ -8,25 +8,42 @@ $in = (string) ($options['in'] ?? __DIR__ . '/../../artifacts/perf/metrics.json'
 $out = (string) ($options['out'] ?? $in);
 
 $profiles = [
-    'smoke' => ['messages' => 20000, 'attempts' => 100000, 'providers' => 5, 'iterations' => 20],
-    'mvp-baseline' => ['messages' => 50000, 'attempts' => 250000, 'providers' => 5, 'iterations' => 24],
-    'stress-lite' => ['messages' => 100000, 'attempts' => 500000, 'providers' => 5, 'iterations' => 30],
+    'smoke' => [
+		'messages' => 20000,
+		'attempts' => 100000,
+		'providers' => 5,
+		'iterations' => 20,
+	],
+    'mvp-baseline' => [
+		'messages' => 50000,
+		'attempts' => 250000,
+		'providers' => 5,
+		'iterations' => 24,
+	],
+    'stress-lite' => [
+		'messages' => 100000,
+		'attempts' => 500000,
+		'providers' => 5,
+		'iterations' => 30,
+	],
 ];
 
-if (! isset($profiles[$profile])) {
+if ( ! isset($profiles[ $profile ])) {
+    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Standalone offline CLI tool; reads/writes local fixture or source files without a WordPress bootstrap.
     fwrite(STDERR, "Unknown profile: {$profile}\n");
     exit(2);
 }
 
 $payload = [];
 if (is_readable($in)) {
-    $decoded = json_decode((string) file_get_contents($in), true);
+    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Standalone offline CLI tool; reads/writes local fixture or source files without a WordPress bootstrap.
+    $decoded = json_decode( (string) file_get_contents($in), true);
     $payload = is_array($decoded) ? $decoded : [];
 }
 
-$config = $profiles[$profile];
+$config = $profiles[ $profile ];
 $started = hrtime(true);
-$dataset = build_log_dataset((int) $config['messages'], (int) $config['attempts'], (int) $config['providers']);
+$dataset = build_log_dataset( (int) $config['messages'], (int) $config['attempts'], (int) $config['providers']);
 $seedMs = elapsed_ms($started);
 
 $filters = [
@@ -58,7 +75,7 @@ $lastDetailAttempts = 0;
 
 for ($i = 0; $i < $iterations; $i++) {
     $page = ($i % 5) + 1;
-    $detailId = ((int) $config['messages']) - ($i * 37 % max(1, (int) $config['messages']));
+    $detailId = ( (int) $config['messages']) - ($i * 37 % max(1, (int) $config['messages']));
 
     $started = hrtime(true);
     $rows = list_log_rows($dataset, [], $page, 50);
@@ -97,7 +114,7 @@ $latency = [
 
 $violations = is_array($payload['violations'] ?? null) ? $payload['violations'] : [];
 foreach ($targets as $key => $max) {
-    if (($latency[$key] ?? INF) > $max) {
+    if (($latency[ $key ] ?? INF) > $max) {
         $violations[] = "{$key} exceeded target {$max}";
     }
 }
@@ -137,16 +154,20 @@ $payload['pass'] = count($payload['violations']) === 0;
 $payload['note'] = 'Synthetic benchmark metrics only; data contains deterministic fake hashes, UUIDs, statuses, and provider ids with no recipients, bodies, headers, secrets, or production logs.';
 
 $dir = dirname($out);
-if (! is_dir($dir) && ! mkdir($dir, 0775, true) && ! is_dir($dir)) {
+// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- Standalone offline CLI tool; reads/writes local fixture or source files without a WordPress bootstrap.
+if ( ! is_dir($dir) && ! mkdir($dir, 0775, true) && ! is_dir($dir)) {
+    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Standalone offline CLI tool; reads/writes local fixture or source files without a WordPress bootstrap.
     fwrite(STDERR, "Failed to create output directory: {$dir}\n");
     exit(1);
 }
 
+// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.WP.AlternativeFunctions.json_encode_json_encode -- Standalone offline CLI tool; reads/writes local fixture or source files without a WordPress bootstrap.
 file_put_contents($out, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CLI progress output, not HTML; preserve the literal local output path.
 echo "log table simulation written: {$out}\n";
 
-if (! $payload['pass']) {
+if ( ! $payload['pass']) {
     exit(3);
 }
 
@@ -175,7 +196,7 @@ function build_log_dataset(int $messageCount, int $attemptCount, int $providerCo
     $remainingAttempts = $attemptCount;
 
     for ($id = $messageCount; $id >= 1; $id--) {
-        $status = $statuses[$id % count($statuses)];
+        $status = $statuses[ $id % count($statuses) ];
         $providerId = ($id % $providerCount) + 1;
         $createdAt = gmdate('Y-m-d H:i:s', $baseTime - (($messageCount - $id) * 37));
         $recipientHash = hash('sha256', 'synthetic-recipient-bucket-' . ($id % 1024));
@@ -203,13 +224,13 @@ function build_log_dataset(int $messageCount, int $attemptCount, int $providerCo
             'attempt_count' => $attempts,
         ];
 
-        $byId[$id] = $row;
-        $attemptsByMessage[$id] = $attempts;
+        $byId[ $id ] = $row;
+        $attemptsByMessage[ $id ] = $attempts;
         $recentIds[] = $id;
-        $statusIndex[$status][] = $id;
-        $providerIndex[$providerId][] = $id;
-        $providerStatusIndex[$providerId . ':' . $status][] = $id;
-        $recipientIndex[$recipientHash][] = $id;
+        $statusIndex[ $status ][] = $id;
+        $providerIndex[ $providerId ][] = $id;
+        $providerStatusIndex[ $providerId . ':' . $status ][] = $id;
+        $recipientIndex[ $recipientHash ][] = $id;
     }
 
     return [
@@ -237,8 +258,8 @@ function list_log_rows(array $dataset, array $filters, int $page, int $perPage):
     $seen = 0;
 
     foreach ($candidateIds as $id) {
-        $row = $dataset['by_id'][$id] ?? null;
-        if (! is_array($row) || ! row_matches_filters($row, $filters)) {
+        $row = $dataset['by_id'][ $id ] ?? null;
+        if ( ! is_array($row) || ! row_matches_filters($row, $filters)) {
             continue;
         }
 
@@ -265,26 +286,26 @@ function candidate_ids(array $dataset, array $filters): array
     $status = (string) ($filters['status'] ?? '');
     $providerId = (int) ($filters['provider_id'] ?? 0);
     $recipientHash = (string) ($filters['recipient_hash'] ?? '');
-    $search = trim((string) ($filters['search'] ?? ''));
+    $search = trim( (string) ($filters['search'] ?? ''));
 
     if ($recipientHash !== '') {
-        return $dataset['recipient_index'][$recipientHash] ?? [];
+        return $dataset['recipient_index'][ $recipientHash ] ?? [];
     }
 
     if ($search !== '' && ctype_digit($search)) {
-        return isset($dataset['by_id'][(int) $search]) ? [(int) $search] : [];
+        return isset($dataset['by_id'][ (int) $search ]) ? [ (int) $search] : [];
     }
 
     if ($providerId > 0 && $status !== '') {
-        return $dataset['provider_status_index'][$providerId . ':' . $status] ?? [];
+        return $dataset['provider_status_index'][ $providerId . ':' . $status ] ?? [];
     }
 
     if ($status !== '') {
-        return $dataset['status_index'][$status] ?? [];
+        return $dataset['status_index'][ $status ] ?? [];
     }
 
     if ($providerId > 0) {
-        return $dataset['provider_index'][$providerId] ?? [];
+        return $dataset['provider_index'][ $providerId ] ?? [];
     }
 
     return $dataset['recent_ids'];
@@ -301,7 +322,7 @@ function row_matches_filters(array $row, array $filters): bool
     $recipientHash = (string) ($filters['recipient_hash'] ?? '');
     $dateFrom = (string) ($filters['date_from'] ?? '');
     $dateTo = (string) ($filters['date_to'] ?? '');
-    $search = trim((string) ($filters['search'] ?? ''));
+    $search = trim( (string) ($filters['search'] ?? ''));
 
     if ($status !== '' && (string) $row['status'] !== $status) {
         return false;
@@ -323,7 +344,7 @@ function row_matches_filters(array $row, array $filters): bool
         return false;
     }
 
-    if ($search !== '' && ! ctype_digit($search) && ! str_contains((string) $row['message_uuid'], $search)) {
+    if ($search !== '' && ! ctype_digit($search) && ! str_contains( (string) $row['message_uuid'], $search)) {
         return false;
     }
 
@@ -338,16 +359,18 @@ function row_matches_filters(array $row, array $filters): bool
 function export_log_rows(array $dataset, array $filters, int $limit): array
 {
     $exported = [];
+    $exportedCount = 0;
     $page = 1;
 
-    while (count($exported) < $limit) {
-        $rows = list_log_rows($dataset, $filters, $page, min(100, $limit - count($exported)));
+    while ($exportedCount < $limit) {
+        $rows = list_log_rows($dataset, $filters, $page, min(100, $limit - $exportedCount));
         if ($rows === []) {
             break;
         }
 
         array_push($exported, ...$rows);
-        $page++;
+        $exportedCount += count($rows);
+        ++$page;
     }
 
     return $exported;
@@ -359,8 +382,8 @@ function export_log_rows(array $dataset, array $filters, int $limit): array
  */
 function detail_log_row(array $dataset, int $messageId): array
 {
-    $message = $dataset['by_id'][$messageId] ?? [];
-    $attemptCount = (int) ($dataset['attempts_by_message'][$messageId] ?? 0);
+    $message = $dataset['by_id'][ $messageId ] ?? [];
+    $attemptCount = (int) ($dataset['attempts_by_message'][ $messageId ] ?? 0);
     $attempts = [];
 
     for ($attemptNo = 1; $attemptNo <= $attemptCount; $attemptNo++) {
@@ -375,7 +398,10 @@ function detail_log_row(array $dataset, int $messageId): array
         ];
     }
 
-    return ['message' => is_array($message) ? $message : [], 'attempts' => $attempts];
+    return [
+		'message' => is_array($message) ? $message : [],
+		'attempts' => $attempts,
+	];
 }
 
 /**
@@ -384,6 +410,7 @@ function detail_log_row(array $dataset, int $messageId): array
 function schema_index_checks(): array
 {
     $schemaFile = __DIR__ . '/../../src/Core/DatabaseSchema.php';
+    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Standalone offline CLI tool; reads/writes local fixture or source files without a WordPress bootstrap.
     $schema = is_readable($schemaFile) ? (string) file_get_contents($schemaFile) : '';
     $expected = [
         'messages.PRIMARY KEY id' => 'PRIMARY KEY  (id)',
@@ -400,12 +427,15 @@ function schema_index_checks(): array
     $missing = [];
 
     foreach ($expected as $label => $needle) {
-        if (! str_contains($schema, $needle)) {
+        if ( ! str_contains($schema, $needle)) {
             $missing[] = $label;
         }
     }
 
-    return ['checked' => array_keys($expected), 'missing' => $missing];
+    return [
+		'checked' => array_keys($expected),
+		'missing' => $missing,
+	];
 }
 
 /**
@@ -420,7 +450,7 @@ function p95(array $values): float
     sort($values);
     $index = (int) ceil(count($values) * 0.95) - 1;
 
-    return round($values[max(0, min($index, count($values) - 1))], 3);
+    return round($values[ max(0, min($index, count($values) - 1)) ], 3);
 }
 
 function elapsed_ms(int $start): float

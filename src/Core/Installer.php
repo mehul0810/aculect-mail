@@ -18,7 +18,7 @@ final class Installer
 
     public static function maybeUpgrade(): void
     {
-        if (! defined('ABSPATH')) {
+        if ( ! defined('ABSPATH')) {
             return;
         }
 

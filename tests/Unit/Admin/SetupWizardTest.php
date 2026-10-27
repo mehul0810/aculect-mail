@@ -48,9 +48,9 @@ final class SetupWizardTest extends TestCase
         $output = (string) ob_get_clean();
 
         self::assertStringContainsString('onesmtp-setup-shell', $output);
-        self::assertStringContainsString('is-simplified', $output);
+        self::assertStringContainsString('onesmtp-setup-progress', $output);
         self::assertStringNotContainsString('onesmtp-setup-rail', $output);
-        self::assertStringContainsString('Complete Aculect Mail setup', $output);
+        self::assertStringContainsString('Email delivery needs setup', $output);
         self::assertStringContainsString('View providers', $output);
         self::assertStringNotContainsString('plain-password', $output);
     }
@@ -58,8 +58,22 @@ final class SetupWizardTest extends TestCase
     public function test_render_reports_only_active_providers_when_inactive_entries_exist(): void
     {
         $GLOBALS['wpdb']->activeProviders = [
-            ['id' => 7, 'name' => 'Primary SMTP', 'adapter_type' => 'smtp', 'is_active' => 1, 'priority' => 1, 'weight' => 1],
-            ['id' => 8, 'name' => 'Inactive SMTP', 'adapter_type' => 'smtp', 'is_active' => 0, 'priority' => 2, 'weight' => 1],
+            [
+				'id' => 7,
+				'name' => 'Primary SMTP',
+				'adapter_type' => 'smtp',
+				'is_active' => 1,
+				'priority' => 1,
+				'weight' => 1,
+			],
+            [
+				'id' => 8,
+				'name' => 'Inactive SMTP',
+				'adapter_type' => 'smtp',
+				'is_active' => 0,
+				'priority' => 2,
+				'weight' => 1,
+			],
         ];
 
         $wizard = new SetupWizard(new ProviderRepository());
@@ -69,9 +83,9 @@ final class SetupWizardTest extends TestCase
         $output = (string) ob_get_clean();
 
         self::assertStringContainsString('is-complete', $output);
-        self::assertStringContainsString('backup provider', $output);
+        self::assertStringContainsString('2 connected', $output);
         self::assertStringContainsString('is-pending', $output);
-        self::assertStringContainsString('A backup provider is recommended for failover.', $output);
+        self::assertStringContainsString('1 of 3 essentials complete', $output);
     }
 
     public function test_render_keeps_provider_configuration_in_the_providers_workspace(): void
@@ -82,10 +96,10 @@ final class SetupWizardTest extends TestCase
         $wizard->render();
         $output = (string) ob_get_clean();
 
-        self::assertStringContainsString('onesmtp-overview-setup-card', $output);
+        self::assertStringContainsString('onesmtp-setup-panel', $output);
         self::assertStringNotContainsString('Setup guidance', $output);
         self::assertStringContainsString('Connect a provider', $output);
-        self::assertStringContainsString('Set up sender identity', $output);
+        self::assertStringContainsString('Add your sender identity', $output);
         self::assertStringNotContainsString('Provider capability matrix', $output);
     }
 
@@ -97,7 +111,7 @@ final class SetupWizardTest extends TestCase
         $wizard->render();
         $output = (string) ob_get_clean();
 
-        self::assertStringContainsString('Set up sender identity', $output);
+        self::assertStringContainsString('Add your sender identity', $output);
         self::assertStringNotContainsString('Unavailable capabilities do not block setup.', $output);
         self::assertStringNotContainsString('secret-api-key', $output);
         self::assertStringNotContainsString('secret-password', $output);
@@ -148,7 +162,7 @@ final class SetupWizardTest extends TestCase
         $providerInsert = $GLOBALS['wpdb']->inserts[0];
         $eventInsert = $GLOBALS['wpdb']->inserts[1];
         $auditInsert = $GLOBALS['wpdb']->inserts[2];
-        $config = json_decode((string) $providerInsert['data']['config_json'], true);
+        $config = json_decode( (string) $providerInsert['data']['config_json'], true);
         $vault = new SecretVault();
 
         self::assertSame('Primary API', $providerInsert['data']['name']);
@@ -157,8 +171,8 @@ final class SetupWizardTest extends TestCase
         self::assertSame('admin@example.test', $config['from_email']);
         self::assertSame('Admin Sender', $config['from_name']);
         self::assertSame('smtp.example.test', $config['host']);
-        self::assertSame('secret-api-key', $vault->decrypt((string) $config['api_key']));
-        self::assertSame('secret-password', $vault->decrypt((string) $config['password']));
+        self::assertSame('secret-api-key', $vault->decrypt( (string) $config['api_key']));
+        self::assertSame('secret-password', $vault->decrypt( (string) $config['password']));
         self::assertSame('setup_provider_saved', $eventInsert['data']['event_type']);
         self::assertSame('audit_provider_changed', $auditInsert['data']['event_type']);
         self::assertStringNotContainsString('secret-api-key', (string) $auditInsert['data']['context_json']);
@@ -211,9 +225,12 @@ final class SetupWizardTest extends TestCase
         self::assertCount(1, $GLOBALS['wpdb']->inserts);
         self::assertSame('setup_test_email', $GLOBALS['wpdb']->inserts[0]['data']['event_type']);
 
-        $context = json_decode((string) $GLOBALS['wpdb']->inserts[0]['data']['context_json'], true);
+        $context = json_decode( (string) $GLOBALS['wpdb']->inserts[0]['data']['context_json'], true);
 
-        self::assertSame(['ok' => true, 'code' => 'accepted'], $context);
+        self::assertSame([
+			'ok' => true,
+			'code' => 'accepted',
+		], $context);
         self::assertStringNotContainsString('secret-api-key', (string) $GLOBALS['wpdb']->inserts[0]['data']['context_json']);
         self::assertStringContainsString('onesmtp_setup_status=test_sent', (string) $GLOBALS['onesmtp_test_redirect']['location']);
     }

@@ -13,18 +13,19 @@ final class NativeDnsResolver implements DnsResolverInterface
 
     public function txt(string $domain): array
     {
-        if (! $this->isAvailable()) {
+        if ( ! $this->isAvailable()) {
             return [];
         }
 
+        // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- DNS failure is expected and handled by the false-result guard below; do not emit resolver warnings into admin HTML.
         $records = @dns_get_record($domain, DNS_TXT);
-        if (! is_array($records)) {
+        if ( ! is_array($records)) {
             return [];
         }
 
         $values = [];
         foreach ($records as $record) {
-            if (! is_array($record)) {
+            if ( ! is_array($record)) {
                 continue;
             }
 

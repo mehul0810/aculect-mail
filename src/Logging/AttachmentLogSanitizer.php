@@ -22,13 +22,13 @@ final class AttachmentLogSanitizer
         $attachments = $this->normalizeAttachments($payload['attachments'] ?? []);
         unset($payload['attachments']);
 
-        if (! $this->settings->get()->isEnabled()) {
-            unset($payload[self::PAYLOAD_KEY]);
+        if ( ! $this->settings->get()->isEnabled()) {
+            unset($payload[ self::PAYLOAD_KEY ]);
 
             return $payload;
         }
 
-        $payload[self::PAYLOAD_KEY] = $this->metadataFor($attachments);
+        $payload[ self::PAYLOAD_KEY ] = $this->metadataFor($attachments);
 
         return $payload;
     }
@@ -41,7 +41,7 @@ final class AttachmentLogSanitizer
         $items = [];
 
         foreach (array_slice($attachments, 0, self::MAX_ITEMS) as $attachment) {
-            $items[] = $this->metadataForAttachment((string) $attachment);
+            $items[] = $this->metadataForAttachment( (string) $attachment);
         }
 
         return [
@@ -61,17 +61,17 @@ final class AttachmentLogSanitizer
             $attachments = $attachments !== '' ? [$attachments] : [];
         }
 
-        if (! is_array($attachments)) {
+        if ( ! is_array($attachments)) {
             return [];
         }
 
         $normalized = [];
         foreach ($attachments as $attachment) {
-            if (! is_scalar($attachment)) {
+            if ( ! is_scalar($attachment)) {
                 continue;
             }
 
-            $value = trim((string) $attachment);
+            $value = trim( (string) $attachment);
             if ($value !== '') {
                 $normalized[] = $value;
             }
@@ -86,7 +86,7 @@ final class AttachmentLogSanitizer
     private function metadataForAttachment(string $attachment): array
     {
         $filename = $this->safeFilename($attachment);
-        $extension = strtolower((string) pathinfo($filename, PATHINFO_EXTENSION));
+        $extension = strtolower( (string) pathinfo($filename, PATHINFO_EXTENSION));
         $size = is_file($attachment) ? filesize($attachment) : false;
 
         return [

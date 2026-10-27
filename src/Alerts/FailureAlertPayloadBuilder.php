@@ -30,14 +30,14 @@ final class FailureAlertPayloadBuilder
             'event_id' => $eventId,
             'occurred_at' => gmdate('c'),
             'site' => [
-                'name' => $this->redactor->redactText((string) get_bloginfo('name'), 120),
+                'name' => $this->redactor->redactText( (string) get_bloginfo('name'), 120),
             ],
             'message' => $this->messageSummary(is_array($message) ? $message : [], $messageId),
             'provider' => $this->providerSummary(is_array($provider) ? $provider : [], $providerId),
             'failure' => [
                 'attempt' => max(0, (int) ($context['attempt'] ?? 0)),
-                'reason' => sanitize_key((string) ($context['reason'] ?? '')),
-                'category' => sanitize_key((string) ($context['failure_category'] ?? '')),
+                'reason' => sanitize_key( (string) ($context['reason'] ?? '')),
+                'category' => sanitize_key( (string) ($context['failure_category'] ?? '')),
             ],
         ];
     }
@@ -48,12 +48,12 @@ final class FailureAlertPayloadBuilder
 
         return [
             'id' => $messageId !== null ? max(0, $messageId) : 0,
-            'uuid' => isset($message['message_uuid']) ? sanitize_text_field((string) $message['message_uuid']) : '',
-            'status' => isset($message['status']) ? sanitize_key((string) $message['status']) : '',
+            'uuid' => isset($message['message_uuid']) ? sanitize_text_field( (string) $message['message_uuid']) : '',
+            'status' => isset($message['status']) ? sanitize_key( (string) $message['status']) : '',
             'current_attempt' => isset($message['current_attempt']) ? max(0, (int) $message['current_attempt']) : 0,
             'max_attempts' => isset($message['max_attempts']) ? max(0, (int) $message['max_attempts']) : 0,
-            'recipients_hash' => $this->safeHash((string) ($message['recipients_hash'] ?? '')),
-            'body_hash' => $this->safeHash((string) ($message['body_hash'] ?? '')),
+            'recipients_hash' => $this->safeHash( (string) ($message['recipients_hash'] ?? '')),
+            'body_hash' => $this->safeHash( (string) ($message['body_hash'] ?? '')),
             'subject_hash' => $subject !== '' ? hash('sha256', $subject) : '',
         ];
     }
@@ -62,9 +62,9 @@ final class FailureAlertPayloadBuilder
     {
         return [
             'id' => $providerId !== null ? max(0, $providerId) : 0,
-            'name' => isset($provider['name']) ? $this->redactor->redactText(sanitize_text_field((string) $provider['name']), 120) : '',
-            'adapter_type' => isset($provider['adapter_type']) ? sanitize_key((string) $provider['adapter_type']) : '',
-            'circuit_state' => isset($provider['circuit_state']) ? sanitize_key((string) $provider['circuit_state']) : '',
+            'name' => isset($provider['name']) ? $this->redactor->redactText(sanitize_text_field( (string) $provider['name']), 120) : '',
+            'adapter_type' => isset($provider['adapter_type']) ? sanitize_key( (string) $provider['adapter_type']) : '',
+            'circuit_state' => isset($provider['circuit_state']) ? sanitize_key( (string) $provider['circuit_state']) : '',
         ];
     }
 

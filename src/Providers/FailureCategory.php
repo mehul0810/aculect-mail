@@ -24,7 +24,7 @@ final class FailureCategory
 
     public static function normalize(?string $category): string
     {
-        $category = sanitize_key((string) $category);
+        $category = sanitize_key( (string) $category);
 
         return in_array($category, self::CATEGORIES, true) ? $category : self::RETRYABLE;
     }

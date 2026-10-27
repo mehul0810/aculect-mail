@@ -45,26 +45,27 @@ $files = new RecursiveIteratorIterator(
 );
 
 foreach ($files as $file) {
-    if (! $file instanceof SplFileInfo || $file->getExtension() !== 'php') {
+    if ( ! $file instanceof SplFileInfo || $file->getExtension() !== 'php') {
         continue;
     }
 
     $relativePath = ltrim(str_replace($root, '', $file->getPathname()), '/');
-    $tokens = token_get_all((string) file_get_contents($file->getPathname()));
+    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Standalone offline CLI tool; reads/writes local fixture or source files without a WordPress bootstrap.
+    $tokens = token_get_all( (string) file_get_contents($file->getPathname()));
     $count = count($tokens);
 
     for ($i = 0; $i < $count; $i++) {
-        $token = $tokens[$i];
+        $token = $tokens[ $i ];
 
-        if (! is_array($token) || $token[0] !== T_STRING || ! in_array($token[1], $functions, true)) {
+        if ( ! is_array($token) || $token[0] !== T_STRING || ! in_array($token[1], $functions, true)) {
             continue;
         }
 
-        $function = $token[1];
+        $functionName = $token[1];
         $line = (int) $token[2];
         $cursor = onesmtp_i18n_next_non_whitespace($tokens, $i + 1);
 
-        if (($tokens[$cursor] ?? null) !== '(') {
+        if (($tokens[ $cursor ] ?? null) !== '(') {
             continue;
         }
 
@@ -74,29 +75,32 @@ foreach ($files as $file) {
             continue;
         }
 
-        if (! onesmtp_i18n_uses_text_domain($function, $arguments, $domain)) {
+        if ( ! onesmtp_i18n_uses_text_domain($functionName, $arguments, $domain)) {
             continue;
         }
 
-        $message = onesmtp_i18n_first_message_argument($function, $arguments);
+        $message = onesmtp_i18n_first_message_argument($functionName, $arguments);
 
         if ($message === null || $message === '') {
             continue;
         }
 
-        $strings[$message]['refs'][] = $relativePath . ':' . $line;
+        $strings[ $message ]['refs'][] = $relativePath . ':' . $line;
     }
 }
 
 ksort($strings);
 
-if (! is_dir(dirname($output))) {
+if ( ! is_dir(dirname($output))) {
+    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- Standalone offline CLI tool; reads/writes local fixture or source files without a WordPress bootstrap.
     mkdir(dirname($output), 0755, true);
 }
 
+// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Standalone offline CLI tool; reads/writes local fixture or source files without a WordPress bootstrap.
 file_put_contents($output, onesmtp_i18n_render_pot($strings));
 
-echo sprintf("Generated %s with %d string(s).\n", str_replace($root . '/', '', $output), count($strings));
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CLI progress output, not HTML; preserve the literal local output path.
+printf("Generated %s with %d string(s).\n", str_replace($root . '/', '', $output), count($strings));
 
 /**
  * Find the next non-whitespace token index.
@@ -109,7 +113,7 @@ function onesmtp_i18n_next_non_whitespace(array $tokens, int $start): int
     $count = count($tokens);
 
     for ($i = $start; $i < $count; $i++) {
-        if (is_array($tokens[$i]) && $tokens[$i][0] === T_WHITESPACE) {
+        if (is_array($tokens[ $i ]) && $tokens[ $i ][0] === T_WHITESPACE) {
             continue;
         }
 
@@ -135,15 +139,15 @@ function onesmtp_i18n_collect_literal_arguments(array $tokens, int $start): arra
     $count = count($tokens);
 
     for ($i = $start; $i < $count; $i++) {
-        $token = $tokens[$i];
+        $token = $tokens[ $i ];
 
         if ($token === '(' || $token === '[') {
-            $depth++;
+            ++$depth;
             continue;
         }
 
         if ($token === ')' || $token === ']') {
-            $depth--;
+            --$depth;
 
             if ($depth === 0) {
                 $arguments[] = $current;
@@ -175,16 +179,16 @@ function onesmtp_i18n_collect_literal_arguments(array $tokens, int $start): arra
  *
  * @param array<int, string|null> $arguments Literal arguments.
  */
-function onesmtp_i18n_uses_text_domain(string $function, array $arguments, string $domain): bool
+function onesmtp_i18n_uses_text_domain(string $functionName, array $arguments, string $domain): bool
 {
-    $domainIndex = match ($function) {
+    $domainIndex = match ($functionName) {
         '_x' => 2,
         '_n' => 3,
         '_nx' => 4,
         default => 1,
     };
 
-    return ($arguments[$domainIndex] ?? null) === $domain;
+    return ($arguments[ $domainIndex ] ?? null) === $domain;
 }
 
 /**
@@ -192,9 +196,9 @@ function onesmtp_i18n_uses_text_domain(string $function, array $arguments, strin
  *
  * @param array<int, string|null> $arguments Literal arguments.
  */
-function onesmtp_i18n_first_message_argument(string $function, array $arguments): ?string
+function onesmtp_i18n_first_message_argument(string $functionName, array $arguments): ?string
 {
-    return match ($function) {
+    return match ($functionName) {
         '_n', '_nx' => $arguments[0] ?? null,
         default => $arguments[0] ?? null,
     };
@@ -254,8 +258,8 @@ POT;
 function onesmtp_i18n_escape_pot(string $value): string
 {
     return str_replace(
-        ["\\", "\"", "\n", "\r", "\t"],
-        ["\\\\", "\\\"", "\\n", "\\r", "\\t"],
+        ['\\', '"', "\n", "\r", "\t"],
+        ['\\\\', '\\"', "\\n", "\\r", "\\t"],
         $value
     );
 }

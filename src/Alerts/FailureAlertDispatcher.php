@@ -21,7 +21,7 @@ final class FailureAlertDispatcher
     public function handleTerminalFailure(array $context, ?int $messageId, ?int $providerId, int $eventId): void
     {
         $settings = $this->settings->get();
-        if (! $settings->hasEnabledChannel()) {
+        if ( ! $settings->hasEnabledChannel()) {
             return;
         }
 
@@ -46,7 +46,7 @@ final class FailureAlertDispatcher
 
     private function sendEmail(array $recipients, array $payload): void
     {
-        if (! function_exists('wp_mail')) {
+        if ( ! function_exists('wp_mail')) {
             return;
         }
 
@@ -85,8 +85,8 @@ final class FailureAlertDispatcher
                 [
                     'message_id' => $messageId,
                     'provider_id' => $providerId,
-                    'reason' => sanitize_key((string) ($context['reason'] ?? '')),
-                    'category' => sanitize_key((string) ($context['failure_category'] ?? '')),
+                    'reason' => sanitize_key( (string) ($context['reason'] ?? '')),
+                    'category' => sanitize_key( (string) ($context['failure_category'] ?? '')),
                 ]
             )
         );

@@ -40,7 +40,7 @@ final class ProviderCapabilityMatrix
             echo '<th scope="row"><strong>' . esc_html($provider['label']) . '</strong><br><code>' . esc_html($type) . '</code><p class="description">' . esc_html($provider['description']) . '</p></th>';
 
             foreach (array_keys($capabilities) as $capability) {
-                $available = ! empty($providerCapabilities[$capability]);
+                $available = ! empty($providerCapabilities[ $capability ]);
                 $label = $available ? __('Available', 'onesmtp') : __('Unavailable', 'onesmtp');
 
                 echo '<td><span aria-label="' . esc_attr($label) . '">' . esc_html($label) . '</span></td>';

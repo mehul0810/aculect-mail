@@ -56,7 +56,7 @@ final class DiagnosticReportGeneratorTest extends TestCase
             'overdue_retry_count' => 0,
             'next_retry_at' => '2026-06-24 12:30:00',
         ];
-        $GLOBALS['wpdb']->failureCategoryRowsBySince[self::SINCE] = [
+        $GLOBALS['wpdb']->failureCategoryRowsBySince[ self::SINCE ] = [
             [
                 'failure_category' => 'authentication',
                 'failure_count' => 3,

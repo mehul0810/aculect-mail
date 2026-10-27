@@ -29,7 +29,7 @@ final class MailConflictNotice
 
     public function render(): void
     {
-        if (! Capabilities::canManage() || $this->isDismissed()) {
+        if ( ! Capabilities::canManage() || $this->isDismissed()) {
             return;
         }
 
@@ -74,7 +74,7 @@ final class MailConflictNotice
 
     public function dismiss(): void
     {
-        if (! Capabilities::canManage()) {
+        if ( ! Capabilities::canManage()) {
             wp_die(esc_html__('You do not have permission to dismiss Aculect Mail notices.', 'onesmtp'));
         }
 

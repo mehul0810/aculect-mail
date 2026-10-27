@@ -24,6 +24,7 @@ final class MetricsRepository
         global $wpdb;
 
         $attemptsTable = TableNames::attempts();
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- TableNames supplies fixed plugin identifiers; runtime values use placeholders.
         $sql = $wpdb->prepare(
             "SELECT
                 COALESCE(SUM(CASE WHEN result = 'sent' THEN 1 ELSE 0 END), 0) AS sent_count,
@@ -33,15 +34,18 @@ final class MetricsRepository
             WHERE created_at >= %s",
             $since
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $attemptRow = $wpdb->get_row($sql, ARRAY_A);
         $attemptRow = is_array($attemptRow) ? $attemptRow : [];
 
         $eventsTable = TableNames::events();
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- TableNames supplies fixed plugin identifiers; runtime values use placeholders.
         $failoverSql = $wpdb->prepare(
             "SELECT COUNT(*) FROM {$eventsTable} WHERE event_type = %s AND created_at >= %s",
             'provider_failover',
             $since
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         return [
             'sent_count'     => (int) ($attemptRow['sent_count'] ?? 0),
@@ -89,6 +93,7 @@ final class MetricsRepository
 
         $attemptsTable = TableNames::attempts();
         $providersTable = TableNames::providers();
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- TableNames supplies fixed plugin identifiers; runtime values use placeholders.
         $attemptSql = $wpdb->prepare(
             "SELECT
                 COALESCE(a.provider_id, 0) AS provider_id,
@@ -103,12 +108,13 @@ final class MetricsRepository
             GROUP BY COALESCE(a.provider_id, 0), p.name, p.adapter_type",
             $since
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         $rows = [];
         $attemptRows = $wpdb->get_results($attemptSql, ARRAY_A);
         foreach (is_array($attemptRows) ? $attemptRows : [] as $row) {
             $providerId = (int) ($row['provider_id'] ?? 0);
-            $rows[$providerId] = [
+            $rows[ $providerId ] = [
                 'provider_id'    => $providerId,
                 'provider_name'  => (string) ($row['provider_name'] ?? 'Unknown provider'),
                 'adapter_type'   => (string) ($row['adapter_type'] ?? 'unknown'),
@@ -122,6 +128,7 @@ final class MetricsRepository
         }
 
         $eventsTable = TableNames::events();
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- TableNames supplies fixed plugin identifiers; runtime values use placeholders.
         $failoverSql = $wpdb->prepare(
             "SELECT
                 COALESCE(e.provider_id, 0) AS provider_id,
@@ -135,12 +142,13 @@ final class MetricsRepository
             'provider_failover',
             $since
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         $failoverRows = $wpdb->get_results($failoverSql, ARRAY_A);
         foreach (is_array($failoverRows) ? $failoverRows : [] as $row) {
             $providerId = (int) ($row['provider_id'] ?? 0);
-            if (! isset($rows[$providerId])) {
-                $rows[$providerId] = [
+            if ( ! isset($rows[ $providerId ])) {
+                $rows[ $providerId ] = [
                     'provider_id'    => $providerId,
                     'provider_name'  => (string) ($row['provider_name'] ?? 'Unknown provider'),
                     'adapter_type'   => (string) ($row['adapter_type'] ?? 'unknown'),
@@ -153,37 +161,41 @@ final class MetricsRepository
                 ];
             }
 
-            $rows[$providerId]['failover_count'] = (int) ($row['failover_count'] ?? 0);
+            $rows[ $providerId ]['failover_count'] = (int) ($row['failover_count'] ?? 0);
         }
 
         // The failover event is attributed to the destination provider above.
         // Decode the redacted event context as well so the dashboard can show
         // how often a provider was switched away from, which is the useful
         // reliability signal for an operator.
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- TableNames supplies fixed plugin identifiers; runtime values use placeholders.
         $eventSql = $wpdb->prepare(
             "SELECT context_json FROM {$eventsTable} WHERE event_type = %s AND created_at >= %s",
             'provider_failover',
             $since
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $eventRows = $wpdb->get_results($eventSql, ARRAY_A);
         $providerMeta = [];
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- TableNames supplies fixed plugin identifiers; runtime values use placeholders.
         $providerRows = $wpdb->get_results("SELECT id, name, adapter_type FROM {$providersTable}", ARRAY_A);
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         foreach (is_array($providerRows) ? $providerRows : [] as $provider) {
-            $providerMeta[(int) ($provider['id'] ?? 0)] = [
+            $providerMeta[ (int) ($provider['id'] ?? 0) ] = [
                 'provider_name' => (string) ($provider['name'] ?? 'Unknown provider'),
                 'adapter_type' => (string) ($provider['adapter_type'] ?? 'unknown'),
             ];
         }
         foreach (is_array($eventRows) ? $eventRows : [] as $event) {
-            $context = json_decode((string) ($event['context_json'] ?? ''), true);
+            $context = json_decode( (string) ($event['context_json'] ?? ''), true);
             $fromProviderId = is_array($context) ? (int) ($context['from_provider_id'] ?? 0) : 0;
             if ($fromProviderId <= 0) {
                 continue;
             }
 
-            if (! isset($rows[$fromProviderId])) {
-                $meta = $providerMeta[$fromProviderId] ?? [];
-                $rows[$fromProviderId] = [
+            if ( ! isset($rows[ $fromProviderId ])) {
+                $meta = $providerMeta[ $fromProviderId ] ?? [];
+                $rows[ $fromProviderId ] = [
                     'provider_id' => $fromProviderId,
                     'provider_name' => (string) ($meta['provider_name'] ?? 'Unknown provider'),
                     'adapter_type' => (string) ($meta['adapter_type'] ?? 'unknown'),
@@ -196,7 +208,7 @@ final class MetricsRepository
                 ];
             }
 
-            $rows[$fromProviderId]['switch_out_count']++;
+            ++$rows[ $fromProviderId ]['switch_out_count'];
         }
 
         foreach ($rows as &$row) {
@@ -207,12 +219,12 @@ final class MetricsRepository
         usort(
             $rows,
             static function (array $a, array $b): int {
-                $activity = ((int) $b['total_activity']) <=> ((int) $a['total_activity']);
+                $activity = ( (int) $b['total_activity']) <=> ( (int) $a['total_activity']);
                 if ($activity !== 0) {
                     return $activity;
                 }
 
-                return strcmp((string) $a['provider_name'], (string) $b['provider_name']);
+                return strcmp( (string) $a['provider_name'], (string) $b['provider_name']);
             }
         );
 

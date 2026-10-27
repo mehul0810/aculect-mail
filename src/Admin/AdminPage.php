@@ -48,8 +48,7 @@ final class AdminPage
         ?SenderIdentityRepository $senderIdentityRepository = null,
         ?MailDeliveryOwnership $deliveryOwnership = null,
         ?SimulationModeSettingsRepository $simulationMode = null
-    )
-    {
+    ) {
         $this->providerRepository = $providerRepository ?? new ProviderRepository();
         $this->senderIdentityRepository = $senderIdentityRepository ?? new SenderIdentityRepository();
         $this->deliveryOwnership = $deliveryOwnership ?? new MailDeliveryOwnership();
@@ -64,7 +63,6 @@ final class AdminPage
         );
         $this->diagnostics = $diagnostics ?? new QueueDiagnosticsAdmin();
         $this->alerts = $alerts ?? new AlertHistoryAdmin();
-        $this->screenRegistry = $this->buildScreenRegistry();
     }
 
     public function registerHooks(): void
@@ -88,7 +86,8 @@ final class AdminPage
      */
     public function suppressExternalNotices(): void
     {
-        $page = isset($_GET['page']) ? sanitize_key(wp_unslash((string) $_GET['page'])) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin display/filter parameter; sanitized here and escaped at output, with no state change.
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash( (string) $_GET['page'])) : '';
         if ($page !== self::MENU_SLUG || ! function_exists('remove_all_actions')) {
             return;
         }
@@ -97,16 +96,18 @@ final class AdminPage
         remove_all_actions('all_admin_notices');
     }
 
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- WordPress action callback accepts hookSuffix for compatibility; page selection handles alternate admin routers.
     public function enqueueAssets(string $hookSuffix): void
     {
-        $page = isset($_GET['page']) ? sanitize_key(wp_unslash((string) $_GET['page'])) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin display/filter parameter; sanitized here and escaped at output, with no state change.
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash( (string) $_GET['page'])) : '';
         // Studio and some WordPress admin routers use a different hook suffix
         // for Settings submenu pages. The page query is the stable boundary.
         if ($page !== self::MENU_SLUG) {
             return;
         }
 
-        if (! function_exists('wp_enqueue_style')) {
+        if ( ! function_exists('wp_enqueue_style')) {
             return;
         }
 
@@ -117,7 +118,7 @@ final class AdminPage
         }
 
         $path = rtrim($pluginPath, '/\\') . '/' . self::ADMIN_STYLE_PATH;
-        if (! file_exists($path)) {
+        if ( ! file_exists($path)) {
             return;
         }
 
@@ -128,12 +129,12 @@ final class AdminPage
             (string) filemtime($path)
         );
 
-        if (! function_exists('wp_enqueue_script')) {
+        if ( ! function_exists('wp_enqueue_script')) {
             return;
         }
 
         $scriptPath = rtrim($pluginPath, '/\\') . '/' . self::ADMIN_SCRIPT_PATH;
-        if (! file_exists($scriptPath)) {
+        if ( ! file_exists($scriptPath)) {
             return;
         }
 
@@ -144,6 +145,8 @@ final class AdminPage
             (string) filemtime($scriptPath),
             true
         );
+
+        wp_enqueue_script('onesmtp-admin-forms', rtrim($pluginUrl, '/\\') . '/assets/admin-forms.js', [self::ADMIN_SCRIPT_HANDLE], (string) filemtime($pluginPath . 'assets/admin-forms.js'), true);
 
         $componentPath = rtrim($pluginPath, '/\\') . '/' . self::COMPONENT_SCRIPT_PATH;
         if (file_exists($componentPath)) {
@@ -190,12 +193,12 @@ final class AdminPage
             'version' => (string) filemtime($componentPath),
         ];
         $assetPath = rtrim($pluginPath, '/\\') . '/build/index.asset.php';
-        if (! file_exists($assetPath)) {
+        if ( ! file_exists($assetPath)) {
             return $fallback;
         }
 
         $asset = require $assetPath;
-        if (! is_array($asset)) {
+        if ( ! is_array($asset)) {
             return $fallback;
         }
 
@@ -226,7 +229,7 @@ final class AdminPage
 
     public function render(): void
     {
-        if (! Capabilities::canManage()) {
+        if ( ! Capabilities::canManage()) {
             wp_die(
                 esc_html__('You do not have permission to access Aculect Mail settings.', 'onesmtp'),
                 esc_html__('Aculect Mail access denied', 'onesmtp'),
@@ -234,13 +237,15 @@ final class AdminPage
             );
         }
 
+        // Plugin construction runs before init; translate labels only when rendering admin UI.
+        $this->screenRegistry = $this->buildScreenRegistry();
         $sections = $this->sections();
         $activeScreen = $this->screenRegistry->resolve($this->requestedScreenId()) ?? $this->screenRegistry->resolve('onesmtp-overview');
         $activeProviders = $this->providerRepository->getActiveProviders();
         $senderIdentity = $this->senderIdentityRepository->get()->toArray();
         $setupReady = $this->isSetupReady($senderIdentity, $activeProviders);
 
-        echo '<div class="wrap onesmtp-admin" data-onesmtp-workspaces>';
+        echo '<div class="wrap onesmtp-admin" data-onesmtp-workspaces data-onesmtp-invalid-message="' . esc_attr__('Changes have not been saved. Review the highlighted fields.', 'onesmtp') . '">';
         $this->renderHeader($sections, $setupReady, $activeScreen?->id() ?? 'onesmtp-overview');
         echo '<hr class="wp-header-end">';
         echo '<div class="onesmtp-admin-shell">';
@@ -307,32 +312,50 @@ final class AdminPage
         echo '<div class="onesmtp-admin-brand">';
         echo '<div class="onesmtp-admin-brand-mark" aria-hidden="true"><img src="' . esc_url($pluginUrl . 'assets/images/aculect-icon-light.svg') . '" alt="" width="44" height="44"></div>';
         echo '<div class="onesmtp-admin-brand-copy">';
-        echo '<h1>' . esc_html__('Mail', 'onesmtp') . '</h1>';
-        echo '<p>' . esc_html__('Reliable email delivery for WordPress.', 'onesmtp') . '</p>';
+        echo '<h1>' . esc_html__('Aculect Mail', 'onesmtp') . '</h1>';
+        echo '<p>' . esc_html__('WordPress email operations', 'onesmtp') . '</p>';
         echo '</div>';
         echo '</div>';
         echo '<div class="onesmtp-admin-header-status">';
+        echo '<span class="onesmtp-site-name">' . esc_html(get_bloginfo('name')) . '</span>';
         echo '<span class="onesmtp-admin-status-dot ' . ($setupReady ? 'is-ready' : 'needs-setup') . '" aria-hidden="true"></span>';
         echo '<div><span class="onesmtp-admin-status-label">' . esc_html__('Delivery readiness', 'onesmtp') . '</span>';
         echo '<span class="onesmtp-admin-status ' . ($setupReady ? 'is-ready' : 'needs-setup') . '">';
-        if (! $this->deliveryOwnership->canAculectDeliver()) {
+        if ( ! $this->deliveryOwnership->canAculectDeliver()) {
             echo esc_html__('SureMail owns delivery', 'onesmtp');
         } elseif ($this->simulationMode->get()->isEnabled()) {
             echo esc_html__('Simulation active', 'onesmtp');
         } else {
-            echo esc_html($setupReady ? __('Setup ready', 'onesmtp') : __('Setup needed', 'onesmtp'));
+            echo esc_html($setupReady ? __('Credentials saved', 'onesmtp') : __('Setup needed', 'onesmtp'));
         }
         echo '</span></div>';
         echo '</div>';
         echo '</div>';
-        echo '<div class="onesmtp-admin-nav">';
+        echo '<div class="onesmtp-section-picker"><label class="screen-reader-text" for="onesmtp-section-picker">' . esc_html__('Aculect Mail sections', 'onesmtp') . '</label><select id="onesmtp-section-picker" data-onesmtp-section-picker>';
+        foreach ($sections as $section) {
+            echo '<option value="' . esc_attr($section['id']) . '"' . ($section['id'] === $activeScreenId ? ' selected' : '') . '>' . esc_html($section['title']) . '</option>';
+        }
+        echo '</select>';
+        AdminUi::icon('chevron-down');
+        echo '</div><div class="onesmtp-admin-nav">';
         echo '<nav class="nav-tab-wrapper" aria-label="' . esc_attr__('Aculect Mail sections', 'onesmtp') . '">';
 
+        $icons = [
+			'onesmtp-overview' => 'squares',
+			'onesmtp-providers' => 'server-stack',
+			'onesmtp-routing' => 'arrows',
+			'onesmtp-activity' => 'inbox',
+			'onesmtp-analytics' => 'chart',
+			'onesmtp-settings' => 'settings',
+			'onesmtp-advanced' => 'adjustments',
+		];
         foreach ($sections as $section) {
             $isActive = $section['id'] === $activeScreenId;
             $className = $isActive ? 'nav-tab nav-tab-active' : 'nav-tab';
             $ariaCurrent = $isActive ? 'page' : '';
-            echo '<a class="' . esc_attr($className) . '" data-onesmtp-workspace-link="' . esc_attr($section['id']) . '" href="' . esc_url($section['href']) . '"' . ($ariaCurrent !== '' ? ' aria-current="' . esc_attr($ariaCurrent) . '"' : '') . '>' . esc_html($section['title']) . '</a>';
+            echo '<a class="' . esc_attr($className) . '" data-onesmtp-workspace-link="' . esc_attr($section['id']) . '" href="' . esc_url($section['href']) . '"' . ($ariaCurrent !== '' ? ' aria-current="' . esc_attr($ariaCurrent) . '"' : '') . '>';
+            AdminUi::icon($icons[ $section['id'] ] ?? 'squares');
+            echo esc_html($section['title']) . '</a>';
         }
 
         echo '</nav>';
@@ -345,39 +368,19 @@ final class AdminPage
      */
     private function renderRoutingOverview(array $activeProviders): void
     {
-        $primary = $activeProviders[0]['name'] ?? __('Primary provider', 'onesmtp');
-        echo '<section class="onesmtp-routing-card"><div class="onesmtp-routing-card-heading"><div><h3>' . esc_html__('Default delivery route', 'onesmtp') . '</h3><p>' . esc_html__('Aculect Mail sends through the highest-priority healthy provider.', 'onesmtp') . '</p></div><span class="onesmtp-status-pill ' . esc_attr($activeProviders === [] ? 'is-pending' : 'is-ready') . '">' . esc_html($activeProviders === [] ? __('Setup needed', 'onesmtp') : __('Active', 'onesmtp')) . '</span></div><div class="onesmtp-route-diagram">';
-        foreach ([['wordpress', __('WordPress', 'onesmtp')], ['envelope', (string) $primary], ['envelope', __('Email', 'onesmtp')]] as $index => [$icon, $label]) {
-            if ($index > 0) echo '<span class="onesmtp-route-line" aria-hidden="true"></span>';
-            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Heroicons renders an SVG selected from a private allowlist and escapes its only dynamic attribute.
-            echo '<div class="onesmtp-route-node"><span>' . Heroicons::render($icon === 'wordpress' ? 'squares' : 'envelope') . '</span><strong>' . esc_html($label) . '</strong></div>';
-        }
-        echo '</div><p class="onesmtp-route-empty">' . esc_html($activeProviders === [] ? __('Connect a provider to activate routing and failover.', 'onesmtp') : __('Your primary provider receives messages by default; healthy backups are used automatically.', 'onesmtp')) . '</p><a class="button button-primary" href="' . esc_url($this->normalizeInternalHref('#onesmtp-providers')) . '">' . esc_html($activeProviders === [] ? __('Connect a provider', 'onesmtp') : __('Manage providers', 'onesmtp')) . '</a></section>';
-        if ($activeProviders !== []) {
-            echo '<details class="onesmtp-routing-rules"><summary>' . esc_html__('Failover and smart routing', 'onesmtp') . '</summary><p>' . esc_html__('Priority, weight, and health determine provider selection. Advanced conditional routing rules will appear here when configured.', 'onesmtp') . '</p></details>';
-        }
+        RoutingView::render($activeProviders);
     }
 
-    private function normalizeInternalHref(string $href): string
-    {
-        if (! str_starts_with($href, '#')) {
-            return $href;
-        }
-
-        $target = ltrim($href, '#');
-        $screen = $this->screenRegistry->resolve($target);
-        $screenId = $screen?->id() ?? 'onesmtp-overview';
-
-        return admin_url('options-general.php?page=' . self::MENU_SLUG . '&tab=' . rawurlencode($screenId) . '#' . $target);
-    }
 
     private function requestedScreenId(): string
     {
-        if (! isset($_GET['tab'])) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin display/filter parameter; sanitized here and escaped at output, with no state change.
+        if ( ! isset($_GET['tab'])) {
             return 'onesmtp-overview';
         }
 
-        return sanitize_key(wp_unslash((string) $_GET['tab']));
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin display/filter parameter; sanitized here and escaped at output, with no state change.
+        return sanitize_key(wp_unslash( (string) $_GET['tab']));
     }
 
     private function buildScreenRegistry(): AdminScreenRegistry
@@ -386,7 +389,7 @@ final class AdminPage
         $registry->register(new AdminScreenDefinition(
             'onesmtp-overview',
             __('Overview', 'onesmtp'),
-            __('Complete the essentials for reliable WordPress email delivery.', 'onesmtp'),
+            __('A clear path from your first connection to a tested sending setup.', 'onesmtp'),
             function (): void {
                 $this->renderAnchorAlias('onesmtp-general');
                 $this->renderAnchorAlias('onesmtp-setup');
@@ -397,7 +400,7 @@ final class AdminPage
         $registry->register(new AdminScreenDefinition(
             'onesmtp-providers',
             __('Providers', 'onesmtp'),
-            __('Connect and manage the services that send WordPress email.', 'onesmtp'),
+            __('Connect email services, check credentials, and control delivery priority.', 'onesmtp'),
             function (): void {
                 $this->providers->render();
             }
@@ -405,7 +408,7 @@ final class AdminPage
         $registry->register(new AdminScreenDefinition(
             'onesmtp-routing',
             __('Routing', 'onesmtp'),
-            __('Choose how Aculect Mail selects a provider for each message.', 'onesmtp'),
+            __('Understand which provider handles each message and what happens if it fails.', 'onesmtp'),
             function (array $activeProviders): void {
                 $this->renderRoutingOverview($activeProviders);
             }
@@ -413,7 +416,7 @@ final class AdminPage
         $registry->register(new AdminScreenDefinition(
             'onesmtp-activity',
             __('Activity', 'onesmtp'),
-            __('Review recent email delivery events from Aculect Mail.', 'onesmtp'),
+            __('Find a message, understand each attempt, and take the next safe action.', 'onesmtp'),
             function (): void {
                 $this->renderAnchorAlias('onesmtp-logs');
                 $this->logs->render();
@@ -423,7 +426,7 @@ final class AdminPage
         $registry->register(new AdminScreenDefinition(
             'onesmtp-analytics',
             __('Analytics', 'onesmtp'),
-            __('Understand delivery performance and provider reliability.', 'onesmtp'),
+            __('See provider acceptance, failures, and recovery without losing the detail.', 'onesmtp'),
             function (): void {
                 $this->renderAnchorAlias('onesmtp-dashboard');
                 $this->dashboard->render();
@@ -433,7 +436,7 @@ final class AdminPage
         $registry->register(new AdminScreenDefinition(
             'onesmtp-settings',
             __('Settings', 'onesmtp'),
-            __('Configure your sender identity and delivery notifications.', 'onesmtp'),
+            __('Control who your emails come from, and how your team stays informed.', 'onesmtp'),
             function (): void {
                 $this->settings->render();
             }
@@ -441,23 +444,46 @@ final class AdminPage
         $registry->register(new AdminScreenDefinition(
             'onesmtp-advanced',
             __('Advanced', 'onesmtp'),
-            __('Manage delivery controls, provider administration, and operational diagnostics.', 'onesmtp'),
+            __('Tune delivery behavior and inspect operational health.', 'onesmtp'),
             function (): void {
-                $this->settings->renderAdvanced();
-                echo '<details id="onesmtp-provider-tools" class="onesmtp-admin-secondary-panel"><summary>' . esc_html__('Provider administration', 'onesmtp') . '</summary>';
-                $this->providers->renderAdvancedTools();
-                echo '</details>';
-                echo '<details id="onesmtp-diagnostics" class="onesmtp-admin-secondary-panel"><summary>' . esc_html__('Queue diagnostics', 'onesmtp') . '</summary>';
-                $this->diagnostics->render();
-                echo '</details>';
-                echo '<details id="onesmtp-alerts" class="onesmtp-admin-secondary-panel"><summary>' . esc_html__('Alert history', 'onesmtp') . '</summary>';
-                $this->alerts->render();
-                echo '</details>';
+                $this->renderAdvancedWorkspace();
             },
             ['onesmtp-tools', 'onesmtp-diagnostics', 'onesmtp-alerts', 'onesmtp-settings-advanced', 'onesmtp-provider-tools']
         ));
 
         return $registry;
+    }
+
+    private function renderAdvancedWorkspace(): void
+    {
+        $groups = [
+			'delivery' => __('Delivery controls', 'onesmtp'),
+			'privacy' => __('Privacy and logs', 'onesmtp'),
+			'transfer' => __('Import / export', 'onesmtp'),
+			'diagnostics' => __('Diagnostics', 'onesmtp'),
+		];
+        echo '<div class="onesmtp-advanced-layout" data-title-delivery="' . esc_attr__('Advanced', 'onesmtp') . '" data-title-privacy="' . esc_attr__('Privacy & portable settings', 'onesmtp') . '" data-title-transfer="' . esc_attr__('Privacy & portable settings', 'onesmtp') . '" data-title-diagnostics="' . esc_attr__('Diagnostics', 'onesmtp') . '"><div class="onesmtp-advanced-nav" data-onesmtp-subnav="advanced"><nav aria-label="' . esc_attr__('Advanced sections', 'onesmtp') . '">';
+        foreach ($groups as $key => $label) {
+            echo '<a href="#onesmtp-advanced-' . esc_attr($key) . '" data-onesmtp-subtab="' . esc_attr($key) . '">' . esc_html($label) . '</a>';
+        }
+        echo '</nav><div class="onesmtp-advanced-picker"><label for="onesmtp-advanced-picker">' . esc_html__('Advanced section', 'onesmtp') . '</label><select id="onesmtp-advanced-picker" data-onesmtp-subpicker="advanced">';
+        foreach ($groups as $key => $label) {
+            echo '<option value="' . esc_attr($key) . '">' . esc_html($label) . '</option>';
+        }
+        echo '</select></div></div><div class="onesmtp-advanced-content">';
+        $this->settings->renderAdvanced();
+        echo '<div class="onesmtp-diagnostics-layout" data-onesmtp-advanced-group="diagnostics"><section id="onesmtp-diagnostics" class="onesmtp-panel"><h3>' . esc_html__('Queue diagnostics', 'onesmtp') . '</h3>';
+        $this->diagnostics->render();
+        echo '</section><section id="onesmtp-alerts" class="onesmtp-panel"><h3>' . esc_html__('Alert history', 'onesmtp') . '</h3>';
+        $this->alerts->render();
+        echo '</section><details id="onesmtp-provider-tools" class="onesmtp-admin-secondary-panel"><summary>' . esc_html__('Provider administration', 'onesmtp') . '</summary>';
+        $this->providers->renderAdvancedTools();
+        echo '</details></div></div><aside class="onesmtp-advanced-health onesmtp-panel"><h3>' . esc_html__('System health', 'onesmtp') . '</h3><dl><dt>' . esc_html__('Retry scheduler', 'onesmtp') . '</dt><dd>';
+        $available = (new \OneSMTP\Queue\ActionSchedulerHealth())->isAvailable();
+        AdminUi::badge($available ? __('Available', 'onesmtp') : __('Unavailable', 'onesmtp'), $available ? 'success' : 'warning');
+        echo '</dd><dt>' . esc_html__('Log retention', 'onesmtp') . '</dt><dd>';
+        AdminUi::badge(sprintf(/* translators: %d: retention days. */ __('%d days', 'onesmtp'), \OneSMTP\Core\RetentionPolicy::getLogRetentionDays()));
+        echo '</dd></dl><p>' . esc_html__('Save each section separately. Delivery controls affect future sends; settings exports exclude secrets and message data.', 'onesmtp') . '</p></aside></div>';
     }
 
     private function renderAnchorAlias(string $id): void
@@ -471,8 +497,8 @@ final class AdminPage
      */
     private function isSetupReady(array $senderIdentity, array $activeProviders): bool
     {
-        $fromEmail = trim((string) ($senderIdentity['from_email'] ?? ''));
-        $fromName = trim((string) ($senderIdentity['from_name'] ?? ''));
+        $fromEmail = trim( (string) ($senderIdentity['from_email'] ?? ''));
+        $fromName = trim( (string) ($senderIdentity['from_name'] ?? ''));
 
         return ! $this->simulationMode->get()->isEnabled()
             && $this->deliveryOwnership->canAculectDeliver()

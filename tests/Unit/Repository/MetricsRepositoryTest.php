@@ -21,13 +21,13 @@ final class MetricsRepositoryTest extends TestCase
 
     public function test_activity_and_pending_summaries_are_aggregate_only(): void
     {
-        $GLOBALS['wpdb']->dashboardActivityRowsBySince[self::SINCE] = [
+        $GLOBALS['wpdb']->dashboardActivityRowsBySince[ self::SINCE ] = [
             'sent_count' => 12,
             'failed_count' => 3,
             'retry_count' => 5,
             'payload_json' => '{"message":"secret body","api_key":"secret-key"}',
         ];
-        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[self::SINCE] = 2;
+        $GLOBALS['wpdb']->dashboardFailoverCountsBySince[ self::SINCE ] = 2;
         $GLOBALS['wpdb']->dashboardPendingRow = [
             'queued_count' => 4,
             'retry_scheduled_count' => 6,
@@ -58,7 +58,7 @@ final class MetricsRepositoryTest extends TestCase
 
     public function test_provider_breakdown_merges_attempts_and_failover_events(): void
     {
-        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[self::SINCE] = [
+        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[ self::SINCE ] = [
             [
                 'provider_id' => 10,
                 'provider_name' => 'Primary SMTP',
@@ -76,7 +76,7 @@ final class MetricsRepositoryTest extends TestCase
                 'retry_count' => 0,
             ],
         ];
-        $GLOBALS['wpdb']->dashboardProviderFailoverRowsBySince[self::SINCE] = [
+        $GLOBALS['wpdb']->dashboardProviderFailoverRowsBySince[ self::SINCE ] = [
             [
                 'provider_id' => 20,
                 'provider_name' => 'Backup Postmark',
@@ -106,7 +106,7 @@ final class MetricsRepositoryTest extends TestCase
 
     public function test_provider_breakdown_counts_switches_away_from_failed_provider(): void
     {
-        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[self::SINCE] = [
+        $GLOBALS['wpdb']->dashboardProviderAttemptRowsBySince[ self::SINCE ] = [
             [
                 'provider_id' => 10,
                 'provider_name' => 'Primary SMTP',
@@ -116,12 +116,26 @@ final class MetricsRepositoryTest extends TestCase
                 'retry_count' => 0,
             ],
         ];
-        $GLOBALS['wpdb']->dashboardProviderEventRowsBySince[self::SINCE] = [
-            ['context_json' => wp_json_encode(['from_provider_id' => 10, 'to_provider_id' => 20])],
-            ['context_json' => wp_json_encode(['from_provider_id' => 10, 'to_provider_id' => 30])],
+        $GLOBALS['wpdb']->dashboardProviderEventRowsBySince[ self::SINCE ] = [
+            [
+				'context_json' => wp_json_encode([
+					'from_provider_id' => 10,
+					'to_provider_id' => 20,
+				]),
+            ],
+            [
+				'context_json' => wp_json_encode([
+					'from_provider_id' => 10,
+					'to_provider_id' => 30,
+				]),
+            ],
         ];
         $GLOBALS['wpdb']->activeProviders = [
-            ['id' => 10, 'name' => 'Primary SMTP', 'adapter_type' => 'smtp'],
+            [
+				'id' => 10,
+				'name' => 'Primary SMTP',
+				'adapter_type' => 'smtp',
+			],
         ];
 
         $breakdown = (new MetricsRepository())->getProviderBreakdown(self::SINCE);
