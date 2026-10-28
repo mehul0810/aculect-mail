@@ -156,15 +156,15 @@ final class AdminPageTest extends TestCase
         self::assertStringContainsString('onesmtp-admin-header', $output);
         self::assertStringContainsString('assets/images/aculect-icon-light.svg', $output);
         self::assertStringContainsString('class="onesmtp-admin-brand-mark" aria-hidden="true"><img', $output);
-        self::assertStringContainsString('<h1>Aculect Mail</h1>', $output);
+        self::assertStringContainsString('<h1>Mail</h1>', $output);
+        self::assertStringNotContainsString('onesmtp-admin-header-status', $output);
+        self::assertStringNotContainsString('WordPress email operations', $output);
         self::assertStringContainsString('onesmtp-setup-panel', $output);
         self::assertStringNotContainsString('onesmtp-overview-side-card', $output);
         self::assertStringContainsString('data-onesmtp-workspace-link="onesmtp-overview"', $output);
         self::assertStringContainsString('nav-tab nav-tab-active', $output);
         self::assertStringContainsString('aria-current="page"', $output);
         self::assertStringContainsString('id="onesmtp-overview"', $output);
-        self::assertStringContainsString('WordPress email operations', $output);
-        self::assertStringContainsString('Setup needed', $output);
         self::assertStringContainsString('Overview', $output);
         self::assertStringContainsString('Routing', $output);
         self::assertStringNotContainsString('data-onesmtp-workspace-link="onesmtp-delivery"', $output);

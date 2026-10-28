@@ -59,7 +59,7 @@ final class QueueDiagnosticsAdmin
 
         if ( ! headers_sent()) {
             header('Content-Type: application/json; charset=utf-8');
-            header('Content-Disposition: attachment; filename=onesmtp-diagnostic-report.json');
+            header('Content-Disposition: attachment; filename=aculect-mail-diagnostic-report.json');
             header('X-Content-Type-Options: nosniff');
         }
 
@@ -76,8 +76,10 @@ final class QueueDiagnosticsAdmin
     {
         $snapshot = $this->diagnostics->snapshot();
         $status = (string) $snapshot['queue_status'];
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only report preview selection; download remains nonce-protected.
+        $view = isset($_GET['onesmtp_diagnostics_view']) ? sanitize_key(wp_unslash( (string) $_GET['onesmtp_diagnostics_view'])) : '';
 
-        echo '<p>' . esc_html__('Review aggregate queue health without exposing recipients, message bodies, provider credentials, tokens, or raw payload content.', 'onesmtp') . '</p>';
+        echo '<p>' . esc_html__('Review queue health and recommended recovery actions.', 'onesmtp') . '</p>';
 
         if ($status === 'attention') {
             echo '<div class="notice notice-warning inline"><p>' . esc_html__('Aculect Mail detected queue conditions that need administrator review.', 'onesmtp') . '</p></div>';
@@ -87,18 +89,19 @@ final class QueueDiagnosticsAdmin
             echo '<div class="notice notice-success inline"><p>' . esc_html__('Aculect Mail retry processing is available and queue activity is within expected bounds.', 'onesmtp') . '</p></div>';
         }
 
-        echo '<table class="widefat striped">';
-        echo '<tbody>';
-        $this->renderRow(__('Scheduler availability', 'onesmtp'), (bool) $snapshot['scheduler_available'] ? __('Available', 'onesmtp') : __('Unavailable', 'onesmtp'));
-        $this->renderRow(__('Queue status', 'onesmtp'), $this->formatStatus($status));
-        $this->renderRow(__('Queued messages', 'onesmtp'), (string) ( (int) $snapshot['queued_count']));
-        $this->renderRow(__('Scheduled retries', 'onesmtp'), (string) ( (int) $snapshot['retry_scheduled_count']));
-        $this->renderRow(__('Overdue retries', 'onesmtp'), (string) ( (int) $snapshot['overdue_retry_count']));
-        $this->renderRow(__('Running retries', 'onesmtp'), (string) ( (int) $snapshot['retrying_count']));
-        $this->renderRow(__('Failed messages', 'onesmtp'), (string) ( (int) $snapshot['failed_count']));
-        $this->renderRow(__('Next retry', 'onesmtp'), (string) ($snapshot['next_retry_at'] ?? __('None scheduled', 'onesmtp')));
-        echo '</tbody>';
-        echo '</table>';
+        if ($view === 'report') {
+            echo '<p><a class="button" href="' . esc_url(admin_url('options-general.php?page=onesmtp&tab=onesmtp-advanced#onesmtp-diagnostics')) . '">' . esc_html__('Back to queue diagnostics', 'onesmtp') . '</a></p>';
+            $this->renderSnapshotTable($snapshot);
+        } else {
+            echo '<p>' . esc_html(sprintf(
+                /* translators: 1: queued messages, 2: scheduled retries, 3: running retries, 4: overdue retries. */
+                __('%1$d queued · %2$d scheduled · %3$d running · %4$d overdue', 'onesmtp'),
+                (int) $snapshot['queued_count'],
+                (int) $snapshot['retry_scheduled_count'],
+                (int) $snapshot['retrying_count'],
+                (int) $snapshot['overdue_retry_count']
+            )) . '</p>';
+        }
 
         echo '<h3>' . esc_html__('Recommended recovery actions', 'onesmtp') . '</h3>';
         echo '<ul>';
@@ -107,9 +110,24 @@ final class QueueDiagnosticsAdmin
         }
         echo '</ul>';
 
-        echo '<details class="onesmtp-report-details"><summary>' . esc_html__('Privacy-safe diagnostic report', 'onesmtp') . '</summary>';
-        $this->renderReportSection();
-        echo '</details>';
+        echo '<section class="onesmtp-report-details" aria-labelledby="onesmtp-report-title">';
+        $this->renderReportSection($view === 'report');
+        echo '</section>';
+    }
+
+    /** @param array<string,mixed> $snapshot */
+    private function renderSnapshotTable(array $snapshot): void
+    {
+        echo '<table class="widefat striped"><tbody>';
+        $this->renderRow(__('Scheduler availability', 'onesmtp'), (bool) $snapshot['scheduler_available'] ? __('Available', 'onesmtp') : __('Unavailable', 'onesmtp'));
+        $this->renderRow(__('Queue status', 'onesmtp'), $this->formatStatus( (string) $snapshot['queue_status']));
+        $this->renderRow(__('Queued messages', 'onesmtp'), (string) ( (int) $snapshot['queued_count']));
+        $this->renderRow(__('Scheduled retries', 'onesmtp'), (string) ( (int) $snapshot['retry_scheduled_count']));
+        $this->renderRow(__('Overdue retries', 'onesmtp'), (string) ( (int) $snapshot['overdue_retry_count']));
+        $this->renderRow(__('Running retries', 'onesmtp'), (string) ( (int) $snapshot['retrying_count']));
+        $this->renderRow(__('Failed messages', 'onesmtp'), (string) ( (int) $snapshot['failed_count']));
+        $this->renderRow(__('Next retry', 'onesmtp'), (string) ($snapshot['next_retry_at'] ?? __('None scheduled', 'onesmtp')));
+        echo '</tbody></table>';
     }
 
     private function renderRow(string $label, string $value): void
@@ -122,10 +140,12 @@ final class QueueDiagnosticsAdmin
         return str_replace('_', ' ', sanitize_key($status));
     }
 
-    private function renderReportSection(): void
+    private function renderReportSection(bool $showPreview): void
     {
-        echo '<h3>' . esc_html__('Privacy-safe diagnostic report', 'onesmtp') . '</h3>';
-        echo '<p>' . esc_html__('Generate a support report with environment metadata, plugin status, provider summaries, queue state, recent failure categories, and redaction metadata. Raw recipients, message bodies, headers, payload JSON, webhook URLs, tokens, credentials, and provider configuration values are excluded.', 'onesmtp') . '</p>';
+        echo '<h3 id="onesmtp-report-title">' . esc_html__('Privacy-safe diagnostic report', 'onesmtp') . '</h3>';
+        echo '<p>' . esc_html($showPreview
+            ? __('This report includes environment metadata, plugin status, provider summaries, queue state, recent failure categories, and redaction metadata. Raw recipients, message bodies, headers, payload JSON, webhook URLs, tokens, credentials, and provider configuration values are excluded.', 'onesmtp')
+            : __('Download or inspect a redacted support report with queue, provider, and environment details.', 'onesmtp')) . '</p>';
 
         $downloadUrl = add_query_arg(
             [
@@ -137,6 +157,11 @@ final class QueueDiagnosticsAdmin
         );
 
         echo '<p><a class="button button-secondary" href="' . esc_url($downloadUrl) . '">' . esc_html__('Download diagnostic report', 'onesmtp') . '</a></p>';
+
+        if ( ! $showPreview) {
+            echo '<p><a class="button" href="' . esc_url(admin_url('options-general.php?page=onesmtp&tab=onesmtp-advanced&onesmtp_diagnostics_view=report#onesmtp-diagnostics')) . '">' . esc_html__('View report', 'onesmtp') . '</a></p>';
+            return;
+        }
 
         try {
             $report = $this->reportGenerator->generate();
@@ -154,7 +179,7 @@ final class QueueDiagnosticsAdmin
         }
 
         echo '<p><label for="onesmtp-diagnostic-preview">' . esc_html__('Report preview', 'onesmtp') . '</label></p>';
-        echo '<textarea id="onesmtp-diagnostic-preview" class="large-text code" rows="18" readonly="readonly">' . esc_textarea($encoded) . '</textarea>';
+        echo '<textarea id="onesmtp-diagnostic-preview" class="large-text code" rows="10" readonly="readonly">' . esc_textarea($encoded) . '</textarea>';
     }
 
     private function isTestingRuntime(): bool

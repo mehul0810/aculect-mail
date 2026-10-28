@@ -301,7 +301,7 @@ final class LogAdmin
             return;
         }
 
-        echo '<details class="onesmtp-queue-details"><summary>' . esc_html__('Inspect queued messages', 'onesmtp') . '</summary><div class="onesmtp-queue-table-wrap"><table class="widefat onesmtp-responsive-table"><thead><tr>';
+        echo '<div class="onesmtp-queue-table-wrap"><h4>' . esc_html__('Waiting for delivery', 'onesmtp') . '</h4><table class="widefat onesmtp-responsive-table"><thead><tr>';
         echo '<th scope="col">' . esc_html__('Message', 'onesmtp') . '</th>';
         echo '<th scope="col">' . esc_html__('Status', 'onesmtp') . '</th>';
         echo '<th scope="col">' . esc_html__('Attempts', 'onesmtp') . '</th>';
@@ -314,12 +314,17 @@ final class LogAdmin
             $messageId = (int) ($row['id'] ?? 0);
             $status = (string) ($row['status'] ?? '');
             $detailUrl = add_query_arg(
-                [self::DETAIL_PARAM => $messageId],
-                admin_url('options-general.php?page=onesmtp#onesmtp-logs')
+                [
+                    'tab' => 'onesmtp-activity',
+                    self::DETAIL_PARAM => $messageId,
+                ],
+                admin_url('options-general.php?page=onesmtp')
             );
             echo '<tr>';
             echo '<th scope="row"><a href="' . esc_url($detailUrl) . '">#' . esc_html( (string) $messageId) . '</a><br><code>' . esc_html( (string) ($row['message_uuid'] ?? '')) . '</code></th>';
-            echo '<td data-label="' . esc_attr__('Status', 'onesmtp') . '">' . esc_html($this->formatStatus($status)) . '</td>';
+            echo '<td data-label="' . esc_attr__('Status', 'onesmtp') . '">';
+            AdminUi::badge($this->formatStatus($status), $status === 'sent' ? 'success' : ($status === 'failed' ? 'error' : 'warning'));
+            echo '</td>';
             echo '<td data-label="' . esc_attr__('Attempts', 'onesmtp') . '">' . esc_html( (string) ( (int) ($row['queue_attempt_count'] ?? $row['current_attempt'] ?? 0))) . ' / ' . esc_html( (string) ( (int) ($row['max_attempts'] ?? 0))) . '</td>';
             echo '<td data-label="' . esc_attr__('Switchovers', 'onesmtp') . '">' . esc_html( (string) ( (int) ($row['switch_count'] ?? 0))) . '</td>';
             echo '<td data-label="' . esc_attr__('Next retry', 'onesmtp') . '">' . esc_html( (string) ($row['next_retry_at'] ?? __('Waiting for first attempt', 'onesmtp'))) . '</td>';
@@ -337,7 +342,7 @@ final class LogAdmin
             echo '</td></tr>';
         }
 
-        echo '</tbody></table></div></details></section>';
+        echo '</tbody></table></div></section>';
     }
 
     private function renderList(): void
@@ -371,17 +376,6 @@ final class LogAdmin
             return;
         }
 
-        $this->renderMessageRows($messages);
-        echo '<p>' . esc_html(
-            sprintf(
-                /* translators: 1: current page, 2: total pages, 3: total log count. */
-                __('Page %1$d of %2$d (%3$d log entries)', 'onesmtp'),
-                $page,
-                $maxPage,
-                $total
-            )
-        ) . '</p>';
-
         $canBulkResend = Capabilities::canResendEmails();
         if ($canBulkResend) {
             echo '<form method="post" class="onesmtp-bulk-resend-form" data-onesmtp-confirm>';
@@ -396,64 +390,7 @@ final class LogAdmin
             echo '</p>';
         }
 
-        echo '<details class="onesmtp-legacy-list"><summary>' . esc_html__('Detailed log table and bulk actions', 'onesmtp') . '</summary>';
-        echo '<table class="widefat striped">';
-        echo '<thead><tr>';
-        if ($canBulkResend) {
-            echo '<th scope="col">' . esc_html__('Select', 'onesmtp') . '</th>';
-        }
-        echo '<th scope="col">' . esc_html__('Message', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Status', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Provider', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Switchovers', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Source', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Attempts', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Attachments', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Recipients', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Created', 'onesmtp') . '</th>';
-        echo '<th scope="col">' . esc_html__('Updated', 'onesmtp') . '</th>';
-        echo '</tr></thead><tbody>';
-
-        foreach ($messages as $message) {
-            $messageId = (int) ($message['id'] ?? 0);
-            $detailUrl = add_query_arg(
-                [self::DETAIL_PARAM => $messageId],
-                admin_url('options-general.php?page=onesmtp#onesmtp-logs')
-            );
-
-            echo '<tr>';
-            if ($canBulkResend) {
-                echo '<td>';
-                if ( (string) ($message['status'] ?? '') === 'failed') {
-                    echo '<input type="checkbox" name="' . esc_attr(self::BULK_MESSAGE_IDS_PARAM) . '[]" value="' . esc_attr( (string) $messageId) . '" aria-label="' . esc_attr(sprintf(
-                        /* translators: %d: message log id. */
-                        __('Select failed log entry #%d for resend', 'onesmtp'),
-                        $messageId
-                    )) . '">';
-                } else {
-                    echo '<span aria-hidden="true">&mdash;</span><span class="screen-reader-text">' . esc_html__('Only failed messages can be selected for bulk resend.', 'onesmtp') . '</span>';
-                }
-                echo '</td>';
-            }
-            echo '<th scope="row"><a href="' . esc_url($detailUrl) . '" aria-label="' . esc_attr(sprintf(
-                /* translators: %d: message log id. */
-                __('View log entry #%d details', 'onesmtp'),
-                $messageId
-            )) . '">#' . esc_html( (string) $messageId) . '</a><br><code>' . esc_html( (string) ($message['message_uuid'] ?? '')) . '</code></th>';
-            $payload = $this->payloadFor($message);
-            echo '<td>' . esc_html($this->formatStatus( (string) ($message['status'] ?? ''))) . '</td>';
-            echo '<td>' . esc_html($this->formatProvider( (int) ($message['selected_provider_id'] ?? 0))) . '</td>';
-            echo '<td>' . esc_html( (string) ( (int) ($message['switch_count'] ?? 0))) . '</td>';
-            echo '<td>' . esc_html($this->formatSourceAttribution($payload)) . '</td>';
-            echo '<td>' . esc_html( (string) ( (int) ($message['attempt_count'] ?? $message['current_attempt'] ?? 0))) . ' / ' . esc_html( (string) ( (int) ($message['max_attempts'] ?? 0))) . '</td>';
-            echo '<td>' . esc_html($this->formatAttachmentSummary($payload)) . '</td>';
-            echo '<td>' . esc_html($this->formatRecipientSummary($payload)) . '</td>';
-            echo '<td>' . esc_html( (string) ($message['created_at'] ?? '')) . '</td>';
-            echo '<td>' . esc_html( (string) ($message['updated_at'] ?? '')) . '</td>';
-            echo '</tr>';
-        }
-
-        echo '</tbody></table></details>';
+        $this->renderMessageRows($messages, $canBulkResend);
         if ($canBulkResend) {
             echo '</form>';
         }
@@ -462,9 +399,12 @@ final class LogAdmin
     }
 
     /** @param array<int,array<string,mixed>> $messages */
-    private function renderMessageRows(array $messages): void
+    private function renderMessageRows(array $messages, bool $canBulkResend): void
     {
         echo '<table class="widefat onesmtp-responsive-table onesmtp-message-list"><thead><tr>';
+        if ($canBulkResend) {
+            echo '<th scope="col">' . esc_html__('Select', 'onesmtp') . '</th>';
+        }
         foreach ([__('Message', 'onesmtp'), __('Status', 'onesmtp'), __('Provider', 'onesmtp'), __('Attempts', 'onesmtp'), __('Last activity', 'onesmtp'), __('Action', 'onesmtp')] as $label) {
             echo '<th scope="col">' . esc_html($label) . '</th>';
         }
@@ -477,16 +417,38 @@ final class LogAdmin
 				'tab' => 'onesmtp-activity',
 				self::DETAIL_PARAM => $id,
 			], admin_url('options-general.php?page=onesmtp'));
-            echo '<tr><th scope="row"><a href="' . esc_url($url) . '">#' . esc_html( (string) $id) . '</a><span class="onesmtp-meta">' . esc_html($this->formatRecipientSummary($payload)) . '</span></th><td data-label="' . esc_attr__('Status', 'onesmtp') . '">';
+            echo '<tr>';
+            if ($canBulkResend) {
+                echo '<td data-label="' . esc_attr__('Select', 'onesmtp') . '">';
+                if ($status === 'failed') {
+                    echo '<input type="checkbox" name="' . esc_attr(self::BULK_MESSAGE_IDS_PARAM) . '[]" value="' . esc_attr( (string) $id) . '" aria-label="' . esc_attr(sprintf(
+                        /* translators: %d: message log id. */
+                        __('Select failed log entry #%d for resend', 'onesmtp'),
+                        $id
+                    )) . '">';
+                } else {
+                    echo '<span aria-hidden="true">&mdash;</span><span class="screen-reader-text">' . esc_html__('Only failed messages can be selected for bulk resend.', 'onesmtp') . '</span>';
+                }
+                echo '</td>';
+            }
+            echo '<th scope="row"><a href="' . esc_url($url) . '" aria-label="' . esc_attr(sprintf(
+                /* translators: %d: message log id. */
+                __('View log entry #%d details', 'onesmtp'),
+                $id
+            )) . '">#' . esc_html( (string) $id) . '</a><span class="onesmtp-meta">' . esc_html($this->formatRecipientSummary($payload)) . '</span><span class="onesmtp-meta">' . esc_html($this->formatSourceAttribution($payload)) . '</span></th><td data-label="' . esc_attr__('Status', 'onesmtp') . '">';
             AdminUi::badge($this->formatStatus($status), $status === 'sent' ? 'success' : ($status === 'failed' ? 'error' : 'warning'));
-            echo '</td><td data-label="' . esc_attr__('Provider', 'onesmtp') . '">' . esc_html($this->formatProvider( (int) ($message['selected_provider_id'] ?? 0))) . '</td><td data-label="' . esc_attr__('Attempts', 'onesmtp') . '">' . esc_html( (string) (int) ($message['attempt_count'] ?? $message['current_attempt'] ?? 0)) . ' / ' . esc_html( (string) (int) ($message['max_attempts'] ?? 0)) . '</td><td data-label="' . esc_attr__('Last activity', 'onesmtp') . '">' . esc_html( (string) ($message['updated_at'] ?? '')) . '</td><td><a class="button" href="' . esc_url($url) . '">' . esc_html__('Inspect', 'onesmtp') . '</a></td></tr>';
+            echo '</td><td data-label="' . esc_attr__('Provider', 'onesmtp') . '">' . esc_html($this->formatProvider( (int) ($message['selected_provider_id'] ?? 0))) . '</td><td data-label="' . esc_attr__('Attempts', 'onesmtp') . '">' . esc_html( (string) (int) ($message['attempt_count'] ?? $message['current_attempt'] ?? 0)) . ' / ' . esc_html( (string) (int) ($message['max_attempts'] ?? 0)) . '<span class="onesmtp-meta">' . esc_html(sprintf(
+                /* translators: %d: number of provider switches for this message. */
+                __('Switchovers: %d', 'onesmtp'),
+                (int) ($message['switch_count'] ?? 0)
+            )) . '</span></td><td data-label="' . esc_attr__('Last activity', 'onesmtp') . '">' . esc_html( (string) ($message['updated_at'] ?? '')) . '</td><td><a class="button" href="' . esc_url($url) . '">' . esc_html__('Inspect', 'onesmtp') . '</a></td></tr>';
         }
         echo '</tbody></table>';
     }
 
     private function renderConfirmation(): void
     {
-        echo '<dialog class="onesmtp-confirm-dialog" data-onesmtp-confirm-dialog aria-labelledby="onesmtp-confirm-title" aria-describedby="onesmtp-confirm-description"><h3 id="onesmtp-confirm-title">' . esc_html__('Resend this email?', 'onesmtp') . '</h3><p id="onesmtp-confirm-description">' . esc_html__('A recipient may already have received the original. Resending can create duplicate delivery. Original attachments cannot be restored from logged metadata.', 'onesmtp') . '</p><div class="onesmtp-form-actions"><button type="button" class="button" data-onesmtp-cancel>' . esc_html__('Cancel', 'onesmtp') . '</button><button type="button" class="button button-primary" data-onesmtp-confirm-send>' . esc_html__('Confirm resend', 'onesmtp') . '</button></div></dialog>';
+        echo '<dialog class="onesmtp-confirm-dialog" data-onesmtp-confirm-dialog aria-labelledby="onesmtp-confirm-title" aria-describedby="onesmtp-confirm-description"><h3 id="onesmtp-confirm-title">' . esc_html__('Resend this email?', 'onesmtp') . '</h3><p id="onesmtp-confirm-description">' . esc_html__('A recipient may already have received the original. Resending can create duplicate delivery. Original attachments cannot be restored from logged metadata.', 'onesmtp') . '</p><div class="onesmtp-confirm-actions"><button type="button" class="button" data-onesmtp-cancel>' . esc_html__('Cancel', 'onesmtp') . '</button><button type="button" class="button button-primary" data-onesmtp-confirm-send>' . esc_html__('Confirm resend', 'onesmtp') . '</button></div></dialog>';
     }
 
 
@@ -580,10 +542,11 @@ final class LogAdmin
 
         echo '<span>' . esc_html(
             sprintf(
-                /* translators: 1: current page, 2: total pages. */
-                __('Page %1$d of %2$d', 'onesmtp'),
+                /* translators: 1: current page, 2: total pages, 3: total log count. */
+                __('Page %1$d of %2$d (%3$d log entries)', 'onesmtp'),
                 $page,
-                $maxPage
+                $maxPage,
+                $total
             )
         ) . '</span>';
 
@@ -708,7 +671,7 @@ final class LogAdmin
 
         if ( ! headers_sent()) {
             header('Content-Type: text/csv; charset=utf-8');
-            header('Content-Disposition: attachment; filename=onesmtp-email-logs.csv');
+            header('Content-Disposition: attachment; filename=aculect-mail-email-logs.csv');
             header('X-Content-Type-Options: nosniff');
         }
 
@@ -850,9 +813,9 @@ final class LogAdmin
         $this->renderAttachmentMetadata($payload);
         echo '</section><section class="onesmtp-panel">';
         $this->renderResendForm($messageId, $payload, $eligibleProviders);
-        echo '<details><summary>' . esc_html__('Forward safe summary', 'onesmtp') . '</summary>';
+        echo '</section><section class="onesmtp-panel">';
         $this->renderForwardForm($message);
-        echo '</details></section>';
+        echo '</section>';
 
         echo '</div></div>';
     }

@@ -27,6 +27,8 @@
 		'onesmtp-advanced-privacy': 'onesmtp-advanced',
 		'onesmtp-advanced-transfer': 'onesmtp-advanced',
 		'onesmtp-advanced-diagnostics': 'onesmtp-advanced',
+		'onesmtp-advanced-alerts': 'onesmtp-advanced',
+		'onesmtp-advanced-providers': 'onesmtp-advanced',
 	};
 
 	function resolveWorkspace() {
@@ -240,8 +242,8 @@
 	];
 	const legacy = {
 		'onesmtp-diagnostics': 'diagnostics',
-		'onesmtp-alerts': 'diagnostics',
-		'onesmtp-provider-tools': 'diagnostics',
+		'onesmtp-alerts': 'alerts',
+		'onesmtp-provider-tools': 'providers',
 	};
 	function syncGroups() {
 		const hash = window.location.hash.slice( 1 );
@@ -258,14 +260,7 @@
 				? requested
 				: group.fallback;
 			panels.forEach( ( panel ) => {
-				const portable =
-					group.name === 'advanced' &&
-					[ 'privacy', 'transfer' ].includes( active );
-				panel.hidden = portable
-					? ! [ 'privacy', 'transfer' ].includes(
-							panel.dataset[ group.key ]
-					  )
-					: panel.dataset[ group.key ] !== active;
+				panel.hidden = panel.dataset[ group.key ] !== active;
 			} );
 			root.querySelectorAll(
 				`[data-onesmtp-subnav="${ group.name }"] a`

@@ -8,6 +8,8 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ### Fixed
 
+- Restore colored status pills in the Activity queue table.
+
 - Keep disabled notification fields and labels visibly muted after the shared field styles are applied.
 - Schedule log retention after Action Scheduler initializes its store, avoiding early scheduling and translation notices when the dependency is loaded.
 - Calculate provider acceptance from sent and failed attempts in the selected reporting window.
@@ -29,6 +31,11 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ### Changed
 
+- Simplify default screens with focused Advanced sections and explicit report, alert-context, and Analytics comparison views.
+- Replace remaining admin accordions with visible task panels, a focused manual-provider setup screen, and one Activity table that retains bulk actions and safe message metadata.
+- Replace Analytics accordions with visible provider performance and current-queue panels, with a single provider table and guidance for empty reporting windows.
+- Use Aculect Mail names for settings, diagnostics, and email-log downloads.
+- Compact the admin header and simplify its branding to Mail.
 - Apply the approved responsive Aculect Mail admin design: guided sender setup, connection catalog/editor, routing, message timelines, analytics, notification controls, and focused Advanced sections.
 - Add inline validation, mobile section selectors, explicit resend confirmation with focus return, and retryable lazy UI loading.
 

@@ -73,6 +73,7 @@ final class ProviderAdminTest extends TestCase
 
         self::assertStringContainsString('Primary SMTP', $output);
         self::assertStringContainsString('onesmtp-provider-connection-summary', $output);
+        self::assertStringContainsString('onesmtp_provider_id=7#onesmtp-provider-form', $output);
         self::assertStringContainsString('smtp.example.test', $output);
         self::assertStringContainsString('Circuit open', $output);
         self::assertStringContainsString('Open until 2026-07-01 12:30:00 GMT.', $output);
@@ -88,6 +89,112 @@ final class ProviderAdminTest extends TestCase
         self::assertStringContainsString('postmark', $output);
         self::assertStringContainsString('brevo', $output);
         self::assertStringContainsString('smtp', $output);
+    }
+
+    public function test_default_providers_view_shows_guided_catalog_and_compact_manual_link(): void
+    {
+        ob_start();
+        (new ProviderAdmin(new ProviderRepository()))->render();
+        $output = (string) ob_get_clean();
+
+        self::assertStringContainsString('id="onesmtp-provider-catalog"', $output);
+        self::assertStringContainsString('id="onesmtp-provider-form"', $output);
+        self::assertStringContainsString('Open manual setup', $output);
+        self::assertStringContainsString('onesmtp_provider_mode=manual#onesmtp-provider-form', $output);
+        self::assertStringNotContainsString('<form method="post" class="onesmtp-provider-form">', $output);
+        self::assertStringNotContainsString('Provider ID for updates', $output);
+    }
+
+    public function test_manual_providers_view_shows_existing_nonce_protected_form_and_back_link(): void
+    {
+        $_GET['onesmtp_provider_mode'] = 'manual';
+
+        ob_start();
+        (new ProviderAdmin(new ProviderRepository()))->render();
+        $output = (string) ob_get_clean();
+
+        self::assertStringContainsString('Back to connections', $output);
+        self::assertStringContainsString('id="onesmtp-provider-form"', $output);
+        self::assertStringContainsString('Manual connection setup', $output);
+        self::assertStringContainsString('<form method="post" class="onesmtp-provider-form">', $output);
+        self::assertStringContainsString('name="onesmtp_provider_action" value="save"', $output);
+        self::assertStringContainsString('name="onesmtp_provider_nonce"', $output);
+        self::assertStringContainsString('Provider ID for updates', $output);
+        self::assertStringNotContainsString('id="onesmtp-provider-catalog"', $output);
+    }
+
+    public function test_manual_manage_route_prefills_only_selected_safe_connection_data(): void
+    {
+        $GLOBALS['wpdb']->activeProviders = [
+            [
+                'id' => 7,
+                'name' => 'Other connection',
+                'adapter_type' => 'sendgrid',
+                'priority' => 10,
+                'weight' => 1,
+                'is_active' => 0,
+                'config_json' => wp_json_encode(['api_key' => 'other-secret']),
+            ],
+            [
+                'id' => 8,
+                'name' => 'Primary SMTP',
+                'adapter_type' => 'smtp',
+                'priority' => 20,
+                'weight' => 3,
+                'is_active' => 1,
+                'config_json' => wp_json_encode([
+                    'host' => 'smtp.example.test',
+                    'port' => 587,
+                    'password' => 'stored-secret',
+                ]),
+            ],
+        ];
+        $_GET['onesmtp_provider_mode'] = 'manual';
+        $_GET['onesmtp_provider_id'] = '8';
+
+        ob_start();
+        (new ProviderAdmin(new ProviderRepository()))->render();
+        $output = (string) ob_get_clean();
+
+        self::assertStringContainsString('name="provider_id" type="number" value="8" readonly', $output);
+        self::assertStringContainsString('name="name" type="text" value="Primary SMTP"', $output);
+        self::assertStringContainsString('<option value="smtp" selected>', $output);
+        self::assertStringContainsString('name="priority" type="number" value="20"', $output);
+        self::assertStringContainsString('name="weight" type="number" value="3"', $output);
+        self::assertStringContainsString('name="is_active" value="1" checked', $output);
+        self::assertStringContainsString('name="config[host]" type="text" value="smtp.example.test"', $output);
+        self::assertStringContainsString('name="config[port]" type="text" value="587"', $output);
+        self::assertStringContainsString('name="config[password]" type="password" value=""', $output);
+        self::assertStringNotContainsString('stored-secret', $output);
+        self::assertStringNotContainsString('other-secret', $output);
+        self::assertStringNotContainsString('Other connection', $output);
+    }
+
+    public function test_manual_manage_route_rejects_unknown_or_malformed_connection_id(): void
+    {
+        $_GET['onesmtp_provider_mode'] = 'manual';
+        foreach (['999', '8x', '0'] as $invalidId) {
+            $_GET['onesmtp_provider_id'] = $invalidId;
+            ob_start();
+            (new ProviderAdmin(new ProviderRepository()))->render();
+            $output = (string) ob_get_clean();
+
+            self::assertStringContainsString('Connection not found', $output);
+            self::assertStringContainsString('Back to connections', $output);
+            self::assertStringNotContainsString('<form method="post" class="onesmtp-provider-form">', $output);
+        }
+    }
+
+    public function test_invalid_manual_mode_falls_back_to_guided_catalog(): void
+    {
+        $_GET['onesmtp_provider_mode'] = 'manual<script>';
+
+        ob_start();
+        (new ProviderAdmin(new ProviderRepository()))->render();
+        $output = (string) ob_get_clean();
+
+        self::assertStringContainsString('id="onesmtp-provider-catalog"', $output);
+        self::assertStringNotContainsString('Provider ID for updates', $output);
     }
 
     public function test_render_normalizes_invalid_provider_health_state(): void
@@ -216,6 +323,7 @@ final class ProviderAdminTest extends TestCase
 
     public function test_non_manager_cannot_mutate_provider_state(): void
     {
+        $_GET['onesmtp_provider_mode'] = 'manual';
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_POST = [
             'onesmtp_provider_action' => 'delete',

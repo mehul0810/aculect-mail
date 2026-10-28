@@ -44,6 +44,8 @@ final class DashboardAdmin
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin display/filter parameter; sanitized here and escaped at output, with no state change.
         $selectedWindow = isset($_GET['onesmtp_analytics_window']) ? sanitize_key(wp_unslash( (string) $_GET['onesmtp_analytics_window'])) : self::PROVIDER_WINDOW_KEY;
         $selectedWindow = isset($windows[ $selectedWindow ]) ? $selectedWindow : self::PROVIDER_WINDOW_KEY;
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only analytics view selection.
+        $view = isset($_GET['onesmtp_analytics_view']) ? sanitize_key(wp_unslash( (string) $_GET['onesmtp_analytics_view'])) : '';
         $providerWindow = $windows[ $selectedWindow ];
         $providers = $this->metrics->getProviderBreakdown( (string) $providerWindow['since']);
         $empty = $this->isEmpty($windows, $pending, $providers);
@@ -57,18 +59,21 @@ final class DashboardAdmin
             echo '<option value="' . esc_attr($value) . '"' . ($selectedWindow === $value ? ' selected="selected"' : '') . '>' . esc_html($label) . '</option>';
         }
         echo '</select><button class="button" type="submit">' . esc_html__('Apply', 'onesmtp') . '</button></form></div>';
+        if ($view === 'comparison') {
+            AdminUi::link(__('Back to analytics', 'onesmtp'), admin_url('options-general.php?page=onesmtp&tab=onesmtp-analytics&onesmtp_analytics_window=' . $selectedWindow . '#onesmtp-analytics'), 'arrow-left');
+            echo '<h3>' . esc_html__('Compare reporting periods', 'onesmtp') . '</h3>';
+            $this->renderWindowTable($windows);
+            $this->renderProviderContribution($providers, (string) $providerWindow['label']);
+            return;
+        }
+        echo '<p><a class="button" href="' . esc_url(admin_url('options-general.php?page=onesmtp&tab=onesmtp-analytics&onesmtp_analytics_window=' . $selectedWindow . '&onesmtp_analytics_view=comparison#onesmtp-analytics')) . '">' . esc_html__('Compare periods', 'onesmtp') . '</a></p>';
         if ($empty) {
             $this->renderEmptyAnalytics();
             return;
         }
-        $this->renderSummaryCards($providerWindow, $pending);
-        $this->renderProviderContribution($providers, (string) $providerWindow['label']);
-
-        $this->renderWindowTable($windows);
-        echo '<details class="onesmtp-analytics-details"><summary>' . esc_html__('Queue detail', 'onesmtp') . '</summary>';
-        $this->renderPendingTable($pending);
-        echo '</details>';
+        $this->renderSummaryCards($providerWindow);
         $this->renderProviderTable($providers, (string) $providerWindow['label']);
+        $this->renderPendingSummary($pending);
     }
 
     private function renderEmptyAnalytics(): void
@@ -77,8 +82,8 @@ final class DashboardAdmin
         echo '<section class="onesmtp-analytics-empty">' . Heroicons::render('squares') . '<h3>' . esc_html__('No delivery data yet', 'onesmtp') . '</h3><p>' . esc_html__('Connect a provider and send your first message. Delivery trends and provider comparisons will appear here automatically.', 'onesmtp') . '</p><a class="button button-primary" href="' . esc_url(admin_url('options-general.php?page=onesmtp&tab=onesmtp-providers#onesmtp-providers')) . '">' . esc_html__('Connect a provider', 'onesmtp') . '</a></section>';
     }
 
-    /** @param array<string,int|string> $window @param array<string,int> $pending */
-    private function renderSummaryCards(array $window, array $pending): void
+    /** @param array<string,int|string> $window */
+    private function renderSummaryCards(array $window): void
     {
         $sent = (int) ($window['sent_count'] ?? 0);
         $failed = (int) ($window['failed_count'] ?? 0);
@@ -95,10 +100,6 @@ final class DashboardAdmin
             echo '<section class="onesmtp-panel onesmtp-metric"><h3>' . esc_html($label) . '</h3><strong>' . esc_html($this->formatCount($value)) . '</strong><p>' . esc_html($context) . '</p></section>';
         }
         echo '</div></div>';
-        AdminUi::notice(sprintf(
-            /* translators: %d: messages currently pending. */
-            __('Current queue: %d pending messages', 'onesmtp'), (int) ($pending['total_pending_count'] ?? 0)
-        ), 'info', __('The queue is current state and is independent of the reporting window.', 'onesmtp'));
     }
 
     /** @param array<int,array<string,mixed>> $providers */
@@ -180,22 +181,16 @@ final class DashboardAdmin
     /**
      * @param array{queued_count:int,retry_scheduled_count:int,retrying_count:int,total_pending_count:int} $pending
      */
-    private function renderPendingTable(array $pending): void
+    private function renderPendingSummary(array $pending): void
     {
-        echo '<h3>' . esc_html__('Pending messages', 'onesmtp') . '</h3>';
-
-        if ( (int) $pending['total_pending_count'] === 0) {
-            echo '<div class="notice notice-success inline"><p>' . esc_html__('No messages are currently queued, scheduled for retry, or retrying.', 'onesmtp') . '</p></div>';
-        }
-
-        echo '<table class="widefat striped">';
-        echo '<tbody>';
-        $this->renderMetricRow(__('Total pending', 'onesmtp'), (int) $pending['total_pending_count']);
-        $this->renderMetricRow(__('Queued', 'onesmtp'), (int) $pending['queued_count']);
-        $this->renderMetricRow(__('Scheduled retries', 'onesmtp'), (int) $pending['retry_scheduled_count']);
-        $this->renderMetricRow(__('Running retries', 'onesmtp'), (int) $pending['retrying_count']);
-        echo '</tbody>';
-        echo '</table>';
+        echo '<section class="onesmtp-panel onesmtp-queue-overview"><div class="onesmtp-panel-heading"><h3>' . esc_html__('Current queue', 'onesmtp') . '</h3><a class="button" href="' . esc_url(admin_url('options-general.php?page=onesmtp&tab=onesmtp-activity#onesmtp-activity')) . '">' . esc_html__('Review messages', 'onesmtp') . '</a></div>';
+        echo '<p>' . esc_html(sprintf(
+            /* translators: 1: queued messages, 2: scheduled retries, 3: running retries. */
+            __('%1$d queued · %2$d scheduled · %3$d running', 'onesmtp'),
+            (int) $pending['queued_count'],
+            (int) $pending['retry_scheduled_count'],
+            (int) $pending['retrying_count']
+        )) . '</p></section>';
     }
 
     /**
@@ -203,11 +198,7 @@ final class DashboardAdmin
      */
     private function renderProviderTable(array $providers, string $windowLabel): void
     {
-        echo '<details class="onesmtp-panel"><summary>' . esc_html__('Explore provider metrics', 'onesmtp') . '</summary>';
-        $this->renderProviderDataViews($providers);
-        echo '</details>';
-        echo '<details class="onesmtp-legacy-list"><summary>' . esc_html__('Provider activity detail', 'onesmtp') . '</summary>';
-        echo '<h3>' . esc_html__('Provider activity', 'onesmtp') . '</h3>';
+        echo '<section class="onesmtp-panel onesmtp-provider-performance"><h3>' . esc_html__('Provider performance', 'onesmtp') . '</h3>';
         echo '<p>' . esc_html(sprintf(
             /* translators: %s: activity window label. */
             __('Provider breakdown for %s.', 'onesmtp'),
@@ -216,12 +207,14 @@ final class DashboardAdmin
 
         if ($providers === []) {
             echo '<p>' . esc_html__('No provider-level activity has been recorded for this window.', 'onesmtp') . '</p>';
-            echo '</details>';
+            echo '<p>' . esc_html__('Try a longer reporting window, or review Activity to check whether messages are still queued.', 'onesmtp') . '</p>';
+            echo '</section>';
 
             return;
         }
 
-        echo '<table class="widefat striped">';
+        $this->renderProviderDataViews($providers);
+        echo '<div class="onesmtp-provider-performance-fallback"><table class="widefat onesmtp-responsive-table">';
         echo '<thead><tr>';
         echo '<th scope="col">' . esc_html__('Provider', 'onesmtp') . '</th>';
         echo '<th scope="col">' . esc_html__('Type', 'onesmtp') . '</th>';
@@ -236,16 +229,16 @@ final class DashboardAdmin
             $fullName = (string) $provider['provider_name'];
             echo '<tr>';
             echo '<th scope="row" title="' . esc_attr($fullName) . '">' . esc_html($this->shorten($fullName)) . '</th>';
-            echo '<td>' . esc_html($this->formatProviderType( (string) $provider['adapter_type'])) . '</td>';
-            echo '<td>' . esc_html($this->formatCount( (int) $provider['sent_count'])) . '</td>';
-            echo '<td>' . esc_html($this->formatCount( (int) $provider['failed_count'])) . '</td>';
-            echo '<td>' . esc_html($this->formatCount( (int) $provider['retry_count'])) . '</td>';
-            echo '<td>' . esc_html($this->formatCount( (int) $provider['failover_count'])) . '</td>';
-            echo '<td>' . esc_html($this->formatCount( (int) ($provider['switch_out_count'] ?? 0))) . '</td>';
+            echo '<td data-label="' . esc_attr__('Type', 'onesmtp') . '">' . esc_html($this->formatProviderType( (string) $provider['adapter_type'])) . '</td>';
+            echo '<td data-label="' . esc_attr__('Sent', 'onesmtp') . '">' . esc_html($this->formatCount( (int) $provider['sent_count'])) . '</td>';
+            echo '<td data-label="' . esc_attr__('Failed', 'onesmtp') . '">' . esc_html($this->formatCount( (int) $provider['failed_count'])) . '</td>';
+            echo '<td data-label="' . esc_attr__('Retries', 'onesmtp') . '">' . esc_html($this->formatCount( (int) $provider['retry_count'])) . '</td>';
+            echo '<td data-label="' . esc_attr__('Switched to', 'onesmtp') . '">' . esc_html($this->formatCount( (int) $provider['failover_count'])) . '</td>';
+            echo '<td data-label="' . esc_attr__('Switched away', 'onesmtp') . '">' . esc_html($this->formatCount( (int) ($provider['switch_out_count'] ?? 0))) . '</td>';
             echo '</tr>';
         }
 
-        echo '</tbody></table></details>';
+        echo '</tbody></table></div></section>';
     }
 
     /** @param array<int,array{provider_id:int,provider_name:string,adapter_type:string,sent_count:int,failed_count:int,retry_count:int,failover_count:int,switch_out_count:int,total_activity:int}> $providers */
@@ -306,11 +299,6 @@ final class DashboardAdmin
         ];
         echo '<div class="onesmtp-dataviews-mount" data-onesmtp-dataviews="analytics-providers"></div>';
         echo '<script type="application/json" data-onesmtp-dataviews-config="analytics-providers">' . wp_json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . '</script>';
-    }
-
-    private function renderMetricRow(string $label, int $value): void
-    {
-        echo '<tr><th scope="row">' . esc_html($label) . '</th><td>' . esc_html($this->formatCount($value)) . '</td></tr>';
     }
 
     /**

@@ -718,6 +718,9 @@ if (! function_exists('add_query_arg')) {
     function add_query_arg(array|string $key, mixed $value = null, string|false $url = false): string
     {
         $args = is_array($key) ? $key : [$key => $value];
+        if (is_array($key) && is_string($value)) {
+            $url = $value;
+        }
         $base = is_string($url) && $url !== '' ? $url : 'https://example.org/wp-admin/admin.php';
         $fragment = '';
 

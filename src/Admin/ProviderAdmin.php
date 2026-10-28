@@ -127,16 +127,52 @@ final class ProviderAdmin
 
     public function render(): void
     {
-        $providers = $this->repository->getAllSafe();
-
         $this->renderNotice();
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display mode; no provider action is performed from this query parameter.
+        $mode = isset($_GET['onesmtp_provider_mode']) ? sanitize_key(wp_unslash( (string) $_GET['onesmtp_provider_mode'])) : '';
+        if ($mode === 'manual') {
+            AdminUi::link(__('Back to connections', 'onesmtp'), admin_url('options-general.php?page=onesmtp&tab=onesmtp-providers#onesmtp-provider-catalog'), 'arrow-left');
+            $provider = null;
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only provider selection; save still checks capability and nonce.
+            if (isset($_GET['onesmtp_provider_id'])) {
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only provider selection; save still checks capability and nonce.
+                $requestedId = trim(wp_unslash( (string) $_GET['onesmtp_provider_id']));
+                if (ctype_digit($requestedId) && (int) $requestedId > 0) {
+                    foreach ($this->repository->getAllSafe() as $candidate) {
+                        if ( (int) ($candidate['id'] ?? 0) === (int) $requestedId) {
+                            $provider = $candidate;
+                            break;
+                        }
+                    }
+                }
+                if ($provider === null) {
+                    AdminUi::notice(__('Connection not found', 'onesmtp'), 'warning', __('Return to connections and choose an existing connection, or open manual setup to add a new one.', 'onesmtp'));
+                    return;
+                }
+            }
+            echo '<section id="onesmtp-provider-form" class="onesmtp-provider-form" aria-labelledby="onesmtp-manual-connection-title"><h3 id="onesmtp-manual-connection-title">' . esc_html__('Manual connection setup', 'onesmtp') . '</h3><p>' . esc_html__('Use this form to configure a connection manually or when the guided editor cannot load. Enter only the credentials required by your provider.', 'onesmtp') . '</p>';
+            $this->renderForm($provider);
+            echo '</section>';
+            return;
+        }
+
+        $providers = $this->repository->getAllSafe();
         echo '<div data-onesmtp-provider-overview>';
         $this->renderSureMailCompatibility();
         $this->renderConnections($providers);
         $this->renderProviderCatalog($providers);
-        echo '<details id="onesmtp-provider-form" class="onesmtp-provider-form"><summary>' . esc_html__('Add provider', 'onesmtp') . '</summary>';
-        $this->renderForm();
-        echo '</details></div><div data-onesmtp-provider-editor></div>';
+        echo '<section id="onesmtp-provider-form" class="onesmtp-provider-form" aria-labelledby="onesmtp-manual-connection-title"><h3 id="onesmtp-manual-connection-title">' . esc_html__('Manual connection setup', 'onesmtp') . '</h3><p>' . esc_html__('Need to enter connection settings directly or use a fallback if the guided editor cannot load?', 'onesmtp') . '</p>';
+        AdminUi::link(__('Open manual setup', 'onesmtp'), $this->manualSetupUrl(), 'arrow-right');
+        echo '</section></div><div data-onesmtp-provider-editor></div>';
+    }
+
+    private function manualSetupUrl(int $providerId = 0): string
+    {
+        $url = 'options-general.php?page=onesmtp&tab=onesmtp-providers&onesmtp_provider_mode=manual';
+        if ($providerId > 0) {
+            $url .= '&onesmtp_provider_id=' . $providerId;
+        }
+        return admin_url($url . '#onesmtp-provider-form');
     }
 
     /**
@@ -187,7 +223,7 @@ final class ProviderAdmin
                 if ($id > 0 && $this->repository->hasCredentialRecoveryRequired($id)) {
                     echo '<span class="onesmtp-field-error">' . esc_html__('Credential update needed', 'onesmtp') . '</span>';
                 }
-                echo '</td><td><a class="button" href="#onesmtp-provider-catalog" data-onesmtp-edit-provider="' . esc_attr($type) . '" data-connection-id="' . esc_attr( (string) $id) . '">' . esc_html__('Manage connection', 'onesmtp') . '</a></td></tr>';
+                echo '</td><td><a class="button" href="' . esc_url($this->manualSetupUrl($id)) . '" data-onesmtp-edit-provider="' . esc_attr($type) . '" data-connection-id="' . esc_attr( (string) $id) . '">' . esc_html__('Manage connection', 'onesmtp') . '</a></td></tr>';
             }
             echo '</tbody></table>';
         }
@@ -326,27 +362,31 @@ final class ProviderAdmin
         }, $connections));
     }
 
-    private function renderForm(): void
+    /** @param array<string,mixed>|null $provider Safe provider data for editing, or null when adding. */
+    private function renderForm(?array $provider = null): void
     {
-        echo '<h3>' . esc_html__('Add or update provider', 'onesmtp') . '</h3>';
+        echo '<h3>' . esc_html($provider === null ? __('Add provider', 'onesmtp') : __('Update provider', 'onesmtp')) . '</h3>';
         echo '<form method="post" class="onesmtp-provider-form">';
         AdminUi::nonce(self::ACTION_NAME, self::NONCE_NAME);
         echo '<input type="hidden" name="' . esc_attr(self::ACTION_NAME) . '" value="save">';
 
         echo '<table class="form-table" role="presentation"><tbody>';
-        $this->renderTextInput('provider_id', __('Provider ID for updates', 'onesmtp'), '', 'number');
-        $this->renderTextInput('name', __('Name', 'onesmtp'));
-        $this->renderSelectInput('adapter_type', __('Provider type', 'onesmtp'), ProviderTypes::all());
-        $this->renderTextInput('priority', __('Priority', 'onesmtp'), '100', 'number');
-        $this->renderTextInput('weight', __('Weight', 'onesmtp'), '1', 'number');
+        $this->renderTextInput('provider_id', __('Provider ID for updates', 'onesmtp'), $provider === null ? '' : (string) (int) ($provider['id'] ?? 0), 'number', $provider !== null);
+        $this->renderTextInput('name', __('Name', 'onesmtp'), $provider === null ? '' : (string) ($provider['name'] ?? ''));
+        $this->renderSelectInput('adapter_type', __('Provider type', 'onesmtp'), ProviderTypes::all(), $provider === null ? '' : (string) ($provider['adapter_type'] ?? ''));
+        $this->renderTextInput('priority', __('Priority', 'onesmtp'), $provider === null ? '100' : (string) (int) ($provider['priority'] ?? 100), 'number');
+        $this->renderTextInput('weight', __('Weight', 'onesmtp'), $provider === null ? '1' : (string) (int) ($provider['weight'] ?? 1), 'number');
 
         echo '<tr><th scope="row">' . esc_html__('Active', 'onesmtp') . '</th><td><label>';
-        echo '<input type="checkbox" name="is_active" value="1"> ' . esc_html__('Use this provider for delivery.', 'onesmtp');
+        echo '<input type="checkbox" name="is_active" value="1"' . ($provider !== null && ! empty($provider['is_active']) ? ' checked' : '') . '> ' . esc_html__('Use this provider for delivery.', 'onesmtp');
         echo '</label></td></tr>';
 
         foreach ($this->configFields() as $field => $label) {
             $type = str_contains($field, 'password') || str_contains($field, 'secret') || str_contains($field, 'token') || str_contains($field, 'api_key') ? 'password' : 'text';
-            $this->renderTextInput('config[' . $field . ']', $label, '', $type);
+            $config = $provider !== null && isset($provider['config']) && is_array($provider['config']) ? $provider['config'] : [];
+            $value = $config[ $field ] ?? '';
+            $safeValue = ! $this->isSensitiveField($field) && is_scalar($value) && ! str_contains( (string) $value, '[REDACTED]') ? (string) $value : '';
+            $this->renderTextInput('config[' . $field . ']', $label, $safeValue, $type);
         }
 
         echo '</tbody></table>';
@@ -355,22 +395,22 @@ final class ProviderAdmin
         echo '</form>';
     }
 
-    private function renderTextInput(string $name, string $label, string $value = '', string $type = 'text'): void
+    private function renderTextInput(string $name, string $label, string $value = '', string $type = 'text', bool $fixedValue = false): void
     {
         echo '<tr><th scope="row"><label for="' . esc_attr($this->fieldId($name)) . '">' . esc_html($label) . '</label></th><td>';
-        echo '<input class="regular-text" id="' . esc_attr($this->fieldId($name)) . '" name="' . esc_attr($name) . '" type="' . esc_attr($type) . '" value="' . esc_attr($value) . '">';
+        echo '<input class="regular-text" id="' . esc_attr($this->fieldId($name)) . '" name="' . esc_attr($name) . '" type="' . esc_attr($type) . '" value="' . esc_attr($value) . '"' . ($fixedValue ? ' readonly' : '') . '>';
         echo '</td></tr>';
     }
 
     /**
      * @param array<int,string> $options Options.
      */
-    private function renderSelectInput(string $name, string $label, array $options): void
+    private function renderSelectInput(string $name, string $label, array $options, string $selected = ''): void
     {
         echo '<tr><th scope="row"><label for="' . esc_attr($this->fieldId($name)) . '">' . esc_html($label) . '</label></th><td>';
         echo '<select id="' . esc_attr($this->fieldId($name)) . '" name="' . esc_attr($name) . '">';
         foreach ($options as $option) {
-            echo '<option value="' . esc_attr($option) . '">' . esc_html($option) . '</option>';
+            echo '<option value="' . esc_attr($option) . '"' . ($option === $selected ? ' selected' : '') . '>' . esc_html($option) . '</option>';
         }
         echo '</select>';
         echo '</td></tr>';

@@ -185,6 +185,23 @@ $_GET = [
     'page' => 'onesmtp',
     'onesmtp_message_id' => '21',
 ];
+if (getenv('ONESMTP_FIXTURE_MODE') === 'manual-provider') {
+    $_GET['onesmtp_provider_mode'] = 'manual';
+    $_GET['tab'] = 'onesmtp-providers';
+}
+if (getenv('ONESMTP_FIXTURE_MODE') === 'activity-list') {
+    unset($_GET['onesmtp_message_id']);
+    $_GET['tab'] = 'onesmtp-activity';
+}
+if (getenv('ONESMTP_FIXTURE_MODE') === 'report') {
+    $_GET['tab'] = 'onesmtp-advanced';
+    $_GET['onesmtp_diagnostics_view'] = 'report';
+}
+if (getenv('ONESMTP_FIXTURE_MODE') === 'context') {
+    $_GET['tab'] = 'onesmtp-advanced';
+    $_GET['onesmtp_alert_view'] = 'context';
+    $_GET['onesmtp_alert_event_id'] = '45';
+}
 $_POST = [];
 $_SERVER['REQUEST_METHOD'] = 'GET';
 
@@ -214,7 +231,7 @@ echo '<!doctype html><html lang="en"><head><meta charset="utf-8">';
 echo '<title>Aculect Mail Admin Smoke Fixture</title>';
 echo '<style>';
 echo 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:24px;background:#f0f0f1;color:#1d2327}';
-echo '.wrap{margin:0}';
+echo '.wrap{margin:0}.screen-reader-text{border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px;white-space:nowrap}';
 echo '.postbox{background:#fff;border:1px solid #c3c4c7;box-shadow:0 1px 1px rgba(0,0,0,.04)}';
 echo '.nav-tab{color:#135e96}.widefat{border-collapse:collapse;width:100%;margin:12px 0}';
 echo '.widefat th,.widefat td{border:1px solid #ccd0d4;padding:8px;text-align:left;vertical-align:top}';

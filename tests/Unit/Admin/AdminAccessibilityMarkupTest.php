@@ -132,8 +132,18 @@ final class AdminAccessibilityMarkupTest extends TestCase
         self::assertStringNotContainsString('onesmtp-provider-safe-config', $html);
         self::assertStringNotContainsString('aria-label="Deactivate provider Primary SMTP"', $html);
         self::assertStringNotContainsString('aria-label="Delete provider Primary SMTP"', $html);
-        self::assertStringContainsString('<label for="onesmtp-provider-name">Name</label>', $html);
-        self::assertStringContainsString('<label for="onesmtp-provider-adapter_type">Provider type</label>', $html);
+        self::assertStringContainsString('id="onesmtp-provider-form"', $html);
+        self::assertStringContainsString('Open manual setup', $html);
+        self::assertStringNotContainsString('<label for="onesmtp-provider-name">Name</label>', $html);
+
+        $_GET['onesmtp_provider_mode'] = 'manual';
+        try {
+            $manualHtml = $this->capture(static fn () => (new ProviderAdmin(new ProviderRepository()))->render());
+        } finally {
+            unset($_GET['onesmtp_provider_mode']);
+        }
+        self::assertStringContainsString('<label for="onesmtp-provider-name">Name</label>', $manualHtml);
+        self::assertStringContainsString('<label for="onesmtp-provider-adapter_type">Provider type</label>', $manualHtml);
         self::assertStringNotContainsString('plain-password', $html);
     }
 
@@ -252,7 +262,7 @@ final class AdminAccessibilityMarkupTest extends TestCase
         self::assertStringContainsString('Override existing email', $html);
         self::assertStringContainsString('name="failure_alert_email_enabled"', $html);
         self::assertStringContainsString('Enable email alerts to edit recipients.', $html);
-        self::assertStringContainsString('<th scope="row">Scheduler availability</th>', $html);
+        self::assertStringContainsString('View report', $html);
         self::assertStringNotContainsString('secret-token', $html);
         self::assertStringNotContainsString('payload_json', $html);
     }

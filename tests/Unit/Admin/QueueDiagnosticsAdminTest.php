@@ -50,12 +50,11 @@ final class QueueDiagnosticsAdminTest extends TestCase
         $html = $this->render(true);
 
         self::assertStringContainsString('Aculect Mail has no queued or retrying messages.', $html);
-        self::assertStringContainsString('Scheduler availability', $html);
-        self::assertStringContainsString('Available', $html);
-        self::assertStringContainsString('Overdue retries', $html);
+        self::assertStringContainsString('0 queued · 0 scheduled · 0 running · 0 overdue', $html);
         self::assertStringContainsString('Privacy-safe diagnostic report', $html);
         self::assertStringContainsString('Download diagnostic report', $html);
-        self::assertStringContainsString('Report preview', $html);
+        self::assertStringContainsString('View report', $html);
+        self::assertStringNotContainsString('Report preview', $html);
     }
 
     public function test_render_outputs_unavailable_scheduler_and_overdue_recovery_actions(): void
@@ -72,12 +71,24 @@ final class QueueDiagnosticsAdminTest extends TestCase
 
         $html = $this->render(false);
 
-        self::assertStringContainsString('Unavailable', $html);
-        self::assertStringContainsString('Overdue retries</th><td>3', $html);
+        self::assertStringContainsString('Aculect Mail detected queue conditions', $html);
+        self::assertStringContainsString('3 overdue', $html);
         self::assertStringContainsString('Action Scheduler', $html);
         self::assertStringContainsString('WP-Cron', $html);
         self::assertStringNotContainsString('customer body', $html);
         self::assertStringNotContainsString('secret-token', $html);
+    }
+
+    public function test_report_view_shows_full_status_and_sanitized_preview(): void
+    {
+        $_GET['onesmtp_diagnostics_view'] = 'report';
+        $html = $this->render(true);
+
+        self::assertStringContainsString('Back to queue diagnostics', $html);
+        self::assertStringContainsString('Scheduler availability', $html);
+        self::assertStringContainsString('Report preview', $html);
+        self::assertStringContainsString('id="onesmtp-diagnostic-preview"', $html);
+        self::assertStringNotContainsString('<details', $html);
     }
 
     public function test_download_report_requires_manage_capability(): void

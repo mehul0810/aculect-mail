@@ -100,6 +100,8 @@ final class LogAdminTest extends TestCase
         $html = $this->renderLogs();
 
         self::assertStringContainsString('Email queue', $html);
+        self::assertStringContainsString('Waiting for delivery', $html);
+        self::assertStringNotContainsString('onesmtp-queue-details', $html);
         self::assertStringContainsString('queue-14', $html);
         self::assertStringContainsString('retry scheduled', $html);
         self::assertStringContainsString('>1</td>', $html);
@@ -193,11 +195,12 @@ final class LogAdminTest extends TestCase
 
         $html = $this->renderLogs();
 
-        self::assertStringContainsString('lineage-10', $html);
+        self::assertStringNotContainsString('lineage-10', $html);
         self::assertStringContainsString('sent', $html);
         self::assertStringContainsString('Primary SMTP (smtp)', $html);
         self::assertStringContainsString('Plugin: Contact Forms', $html);
         self::assertStringContainsString('2 recipients across example.com, example.org', $html);
+        self::assertStringNotContainsString('Attachments: Not logged', $html);
         self::assertStringNotContainsString('first@example.com', $html);
         self::assertStringNotContainsString('second@example.org', $html);
         self::assertStringNotContainsString('Sensitive subject', $html);
@@ -483,6 +486,7 @@ final class LogAdminTest extends TestCase
                 'current_attempt' => 2,
                 'max_attempts' => 6,
                 'attempt_count' => 2,
+                'switch_count' => 2,
                 'created_at' => '2026-06-23 10:00:00',
                 'updated_at' => '2026-06-23 10:01:00',
             ],
@@ -504,6 +508,11 @@ final class LogAdminTest extends TestCase
         $bulkForm = $this->htmlBetween($html, '<form method="post" class="onesmtp-bulk-resend-form">', '</form>');
 
         self::assertStringContainsString('Resend selected failed messages', $bulkForm);
+        self::assertSame(1, substr_count($bulkForm, 'onesmtp-message-list'));
+        self::assertStringNotContainsString('onesmtp-legacy-list', $html);
+        self::assertStringContainsString('>Inspect</a>', $bulkForm);
+        self::assertStringContainsString('data-label="Select"', $bulkForm);
+        self::assertStringContainsString('Switchovers: 2', $bulkForm);
         self::assertStringContainsString('name="onesmtp_message_ids[]" value="31"', $bulkForm);
         self::assertStringNotContainsString('name="onesmtp_message_ids[]" value="32"', $bulkForm);
         self::assertStringContainsString('Only failed messages can be selected for bulk resend.', $bulkForm);
@@ -532,6 +541,8 @@ final class LogAdminTest extends TestCase
         $html = $this->renderLogs();
 
         self::assertStringContainsString('Forward safe summary', $html);
+        self::assertStringNotContainsString('<details', $html);
+        self::assertStringContainsString('</section><section class="onesmtp-panel"><h4>Forward safe summary</h4>', $html);
         self::assertStringContainsString('owner@example.test', $html);
         self::assertStringContainsString('name="onesmtp_log_action" value="forward_summary"', $html);
         self::assertStringNotContainsString('Secret subject', $html);

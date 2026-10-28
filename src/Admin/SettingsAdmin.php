@@ -514,7 +514,7 @@ final class SettingsAdmin
 
         if ( ! headers_sent()) {
             header('Content-Type: application/json; charset=utf-8');
-            header('Content-Disposition: attachment; filename=onesmtp-safe-settings.json');
+            header('Content-Disposition: attachment; filename=aculect-mail-safe-settings.json');
             header('X-Content-Type-Options: nosniff');
         }
 

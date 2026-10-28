@@ -258,10 +258,9 @@ final class AdminPage
         $activeScreen = $this->screenRegistry->resolve($this->requestedScreenId()) ?? $this->screenRegistry->resolve('onesmtp-overview');
         $activeProviders = $this->providerRepository->getActiveProviders();
         $senderIdentity = $this->senderIdentityRepository->get()->toArray();
-        $setupReady = $this->isSetupReady($senderIdentity, $activeProviders);
 
         echo '<div class="wrap onesmtp-admin" data-onesmtp-workspaces data-onesmtp-invalid-message="' . esc_attr__('Changes have not been saved. Review the highlighted fields.', 'onesmtp') . '">';
-        $this->renderHeader($sections, $setupReady, $activeScreen?->id() ?? 'onesmtp-overview');
+        $this->renderHeader($sections, $activeScreen?->id() ?? 'onesmtp-overview');
         echo '<hr class="wp-header-end">';
         echo '<div class="onesmtp-admin-shell">';
 
@@ -318,7 +317,7 @@ final class AdminPage
     /**
      * @param array<int,array{id:string,title:string,description:string,href:string}> $sections
      */
-    private function renderHeader(array $sections, bool $setupReady, string $activeScreenId): void
+    private function renderHeader(array $sections, string $activeScreenId): void
     {
         $pluginUrl = defined('ONESMTP_URL') ? (string) constant('ONESMTP_URL') : '';
 
@@ -327,24 +326,12 @@ final class AdminPage
         echo '<div class="onesmtp-admin-brand">';
         echo '<div class="onesmtp-admin-brand-mark" aria-hidden="true"><img src="' . esc_url($pluginUrl . 'assets/images/aculect-icon-light.svg') . '" alt="" width="44" height="44"></div>';
         echo '<div class="onesmtp-admin-brand-copy">';
-        echo '<h1>' . esc_html__('Aculect Mail', 'onesmtp') . '</h1>';
-        echo '<p>' . esc_html__('WordPress email operations', 'onesmtp') . '</p>';
+        echo '<h1>' . esc_html__('Mail', 'onesmtp') . '</h1>';
         echo '</div>';
+        echo '<span class="onesmtp-admin-version">' . esc_html('v' . ONESMTP_VERSION) . '</span>';
         echo '</div>';
-        echo '<div class="onesmtp-admin-header-status">';
-        echo '<span class="onesmtp-site-name">' . esc_html(get_bloginfo('name')) . '</span>';
-        echo '<span class="onesmtp-admin-status-dot ' . ($setupReady ? 'is-ready' : 'needs-setup') . '" aria-hidden="true"></span>';
-        echo '<div><span class="onesmtp-admin-status-label">' . esc_html__('Delivery readiness', 'onesmtp') . '</span>';
-        echo '<span class="onesmtp-admin-status ' . ($setupReady ? 'is-ready' : 'needs-setup') . '">';
-        if ( ! $this->deliveryOwnership->canAculectDeliver()) {
-            echo esc_html__('SureMail owns delivery', 'onesmtp');
-        } elseif ($this->simulationMode->get()->isEnabled()) {
-            echo esc_html__('Simulation active', 'onesmtp');
-        } else {
-            echo esc_html($setupReady ? __('Credentials saved', 'onesmtp') : __('Setup needed', 'onesmtp'));
-        }
-        echo '</span></div>';
-        echo '</div>';
+        echo '<a class="onesmtp-admin-documentation" href="' . esc_url('https://github.com/mehul0810/aculect-mail/blob/main/docs/admin/getting-started.md') . '" target="_blank" rel="noopener noreferrer" aria-label="' . esc_attr__('Documentation (opens in a new tab)', 'onesmtp') . '">' . esc_html__('Documentation', 'onesmtp');
+        echo '</a>';
         echo '</div>';
         echo '<div class="onesmtp-section-picker"><label class="screen-reader-text" for="onesmtp-section-picker">' . esc_html__('Aculect Mail sections', 'onesmtp') . '</label><select id="onesmtp-section-picker" data-onesmtp-section-picker>';
         foreach ($sections as $section) {
@@ -476,8 +463,10 @@ final class AdminPage
 			'privacy' => __('Privacy and logs', 'onesmtp'),
 			'transfer' => __('Import / export', 'onesmtp'),
 			'diagnostics' => __('Diagnostics', 'onesmtp'),
+            'alerts' => __('Alert history', 'onesmtp'),
+            'providers' => __('Provider tools', 'onesmtp'),
 		];
-        echo '<div class="onesmtp-advanced-layout" data-title-delivery="' . esc_attr__('Advanced', 'onesmtp') . '" data-title-privacy="' . esc_attr__('Privacy & portable settings', 'onesmtp') . '" data-title-transfer="' . esc_attr__('Privacy & portable settings', 'onesmtp') . '" data-title-diagnostics="' . esc_attr__('Diagnostics', 'onesmtp') . '"><div class="onesmtp-advanced-nav" data-onesmtp-subnav="advanced"><nav aria-label="' . esc_attr__('Advanced sections', 'onesmtp') . '">';
+        echo '<div class="onesmtp-advanced-layout" data-title-delivery="' . esc_attr__('Advanced', 'onesmtp') . '" data-title-privacy="' . esc_attr__('Privacy and logs', 'onesmtp') . '" data-title-transfer="' . esc_attr__('Import / export', 'onesmtp') . '" data-title-alerts="' . esc_attr__('Alert history', 'onesmtp') . '" data-title-providers="' . esc_attr__('Provider tools', 'onesmtp') . '" data-title-diagnostics="' . esc_attr__('Diagnostics', 'onesmtp') . '"><div class="onesmtp-advanced-nav" data-onesmtp-subnav="advanced"><nav aria-label="' . esc_attr__('Advanced sections', 'onesmtp') . '">';
         foreach ($groups as $key => $label) {
             echo '<a href="#onesmtp-advanced-' . esc_attr($key) . '" data-onesmtp-subtab="' . esc_attr($key) . '">' . esc_html($label) . '</a>';
         }
@@ -489,36 +478,15 @@ final class AdminPage
         $this->settings->renderAdvanced();
         echo '<div class="onesmtp-diagnostics-layout" data-onesmtp-advanced-group="diagnostics"><section id="onesmtp-diagnostics" class="onesmtp-panel"><h3>' . esc_html__('Queue diagnostics', 'onesmtp') . '</h3>';
         $this->diagnostics->render();
-        echo '</section><section id="onesmtp-alerts" class="onesmtp-panel"><h3>' . esc_html__('Alert history', 'onesmtp') . '</h3>';
+        echo '</section></div><div data-onesmtp-advanced-group="alerts"><section id="onesmtp-alerts" class="onesmtp-panel"><h3>' . esc_html__('Alert history', 'onesmtp') . '</h3>';
         $this->alerts->render();
-        echo '</section><details id="onesmtp-provider-tools" class="onesmtp-admin-secondary-panel"><summary>' . esc_html__('Provider administration', 'onesmtp') . '</summary>';
+        echo '</section></div><div data-onesmtp-advanced-group="providers"><section id="onesmtp-provider-tools" class="onesmtp-admin-secondary-panel"><h3>' . esc_html__('Provider administration', 'onesmtp') . '</h3><p>' . esc_html__('Review connection status and delivery priority. Use Providers to add or edit connection credentials.', 'onesmtp') . '</p>';
         $this->providers->renderAdvancedTools();
-        echo '</details></div></div><aside class="onesmtp-advanced-health onesmtp-panel"><h3>' . esc_html__('System health', 'onesmtp') . '</h3><dl><dt>' . esc_html__('Retry scheduler', 'onesmtp') . '</dt><dd>';
-        $available = (new \OneSMTP\Queue\ActionSchedulerHealth())->isAvailable();
-        AdminUi::badge($available ? __('Available', 'onesmtp') : __('Unavailable', 'onesmtp'), $available ? 'success' : 'warning');
-        echo '</dd><dt>' . esc_html__('Log retention', 'onesmtp') . '</dt><dd>';
-        AdminUi::badge(sprintf(/* translators: %d: retention days. */ __('%d days', 'onesmtp'), \OneSMTP\Core\RetentionPolicy::getLogRetentionDays()));
-        echo '</dd></dl><p>' . esc_html__('Save each section separately. Delivery controls affect future sends; settings exports exclude secrets and message data.', 'onesmtp') . '</p></aside></div>';
+        echo '</section></div></div></div>';
     }
 
     private function renderAnchorAlias(string $id): void
     {
         echo '<span id="' . esc_attr($id) . '" class="screen-reader-text" aria-hidden="true"></span>';
-    }
-
-    /**
-     * @param array<string,mixed> $senderIdentity
-     * @param array<int,array<string,mixed>> $activeProviders
-     */
-    private function isSetupReady(array $senderIdentity, array $activeProviders): bool
-    {
-        $fromEmail = trim( (string) ($senderIdentity['from_email'] ?? ''));
-        $fromName = trim( (string) ($senderIdentity['from_name'] ?? ''));
-
-        return ! $this->simulationMode->get()->isEnabled()
-            && $this->deliveryOwnership->canAculectDeliver()
-            && $fromEmail !== ''
-            && $fromName !== ''
-            && $activeProviders !== [];
     }
 }

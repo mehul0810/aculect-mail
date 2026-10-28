@@ -11,13 +11,14 @@ const repoRoot = path.resolve( __dirname, '..', '..' );
 const adminUrl =
 	'https://example.org/wp-admin/options-general.php?page=onesmtp';
 
-function renderAdminFixture() {
+function renderAdminFixture( mode = '' ) {
 	return execFileSync( 'php', [ fixturePath ], {
 		cwd: repoRoot,
 		encoding: 'utf8',
 		env: {
 			...process.env,
 			ONESMTP_PLAYWRIGHT_SMOKE: '1',
+			ONESMTP_FIXTURE_MODE: mode,
 		},
 	} );
 }
@@ -29,10 +30,21 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 		await page.route(
 			'https://example.org/wp-admin/options-general.php**',
 			async ( route ) => {
+				const params = new URL( route.request().url() ).searchParams;
+				let body = html;
+				if ( params.has( 'onesmtp_diagnostics_view' ) ) {
+					body = renderAdminFixture( 'report' );
+				} else if ( params.has( 'onesmtp_alert_view' ) ) {
+					body = renderAdminFixture( 'context' );
+				} else if (
+					params.get( 'onesmtp_provider_mode' ) === 'manual'
+				) {
+					body = renderAdminFixture( 'manual-provider' );
+				}
 				await route.fulfill( {
 					status: 200,
 					contentType: 'text/html; charset=utf-8',
-					body: html,
+					body,
 				} );
 			}
 		);
@@ -40,11 +52,100 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 		await page.goto( adminUrl );
 	} );
 
+	test( 'keeps task panels visible without collapsible sections', async ( {
+		page,
+	}, testInfo ) => {
+		await expect( page.locator( '.onesmtp-admin details' ) ).toHaveCount(
+			0
+		);
+		await openWorkspace( page, 'Providers', 'onesmtp-providers' );
+		await expect( page.locator( '#onesmtp-provider-form' ) ).toBeVisible();
+		await page.locator( '#onesmtp-provider-form' ).screenshot( {
+			path: testInfo.outputPath( 'provider-setup.png' ),
+		} );
+		await openWorkspace( page, 'Activity', 'onesmtp-activity' );
+		await page.screenshot( {
+			path: testInfo.outputPath( 'activity-desktop.png' ),
+		} );
+		await openWorkspace( page, 'Advanced', 'onesmtp-advanced' );
+		await page
+			.locator(
+				'[data-onesmtp-subnav="advanced"] a[href="#onesmtp-advanced-diagnostics"]'
+			)
+			.click();
+		await expect(
+			page.locator( '#onesmtp-diagnostic-preview' )
+		).toHaveCount( 0 );
+		await expect( page.locator( '#onesmtp-provider-tools' ) ).toBeHidden();
+		await page.screenshot( {
+			path: testInfo.outputPath( 'diagnostics-desktop.png' ),
+		} );
+		await page.setViewportSize( { width: 390, height: 844 } );
+		await expect(
+			page.locator( '#onesmtp-diagnostic-preview' )
+		).toHaveCount( 0 );
+		const overflow = await page.evaluate(
+			() => document.documentElement.scrollWidth > window.innerWidth
+		);
+		expect( overflow ).toBe( false );
+		await page.screenshot( {
+			path: testInfo.outputPath( 'diagnostics-mobile.png' ),
+		} );
+	} );
+
+	test( 'offers one visible activity table with guarded bulk actions', async ( {
+		page,
+	}, testInfo ) => {
+		await page.route(
+			'https://example.org/wp-admin/options-general.php**',
+			async ( route ) => {
+				await route.fulfill( {
+					status: 200,
+					contentType: 'text/html',
+					body: renderAdminFixture( 'activity-list' ),
+				} );
+			}
+		);
+		await page.goto( `${ adminUrl }&tab=onesmtp-activity` );
+		await expect( page.locator( '.onesmtp-message-list' ) ).toHaveCount(
+			1
+		);
+		await expect(
+			page.locator( '.onesmtp-bulk-resend-form input[type="checkbox"]' )
+		).toBeVisible();
+		await page.locator( '.onesmtp-message-list' ).screenshot( {
+			path: testInfo.outputPath( 'activity-list-desktop.png' ),
+		} );
+		await page
+			.locator( '.onesmtp-bulk-resend-form input[type="checkbox"]' )
+			.check();
+		await page
+			.locator( '#onesmtp-bulk-action' )
+			.selectOption( 'bulk_resend' );
+		await page
+			.locator( '.onesmtp-bulk-resend-form' )
+			.getByRole( 'button', { name: 'Apply', exact: true } )
+			.click();
+		await expect( page.getByRole( 'dialog' ) ).toBeVisible();
+		await page
+			.getByRole( 'button', { name: 'Cancel', exact: true } )
+			.click();
+		await page.setViewportSize( { width: 390, height: 844 } );
+		await page.locator( '.onesmtp-message-list' ).screenshot( {
+			path: testInfo.outputPath( 'activity-list-mobile.png' ),
+		} );
+		expect(
+			await page.evaluate(
+				() => document.documentElement.scrollWidth <= window.innerWidth
+			)
+		).toBe( true );
+	} );
+
 	test( 'renders the admin shell and primary section navigation', async ( {
 		page,
 	} ) => {
 		await expect(
-			page.getByRole( 'heading', { name: 'Aculect Mail', exact: true } )
+			page.getByRole( 'heading', { name: 'Mail', exact: true } )
 		).toBeVisible();
 		await expect(
 			page.locator(
@@ -149,7 +250,10 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 	} ) => {
 		await captureFormSubmissions( page );
 		await openWorkspace( page, 'Providers', 'onesmtp-providers' );
-		await page.locator( '#onesmtp-provider-form summary' ).click();
+		await page.goto(
+			`${ adminUrl }&tab=onesmtp-providers&onesmtp_provider_mode=manual`
+		);
+		await captureFormSubmissions( page );
 
 		const providerForm = page.locator( 'form.onesmtp-provider-form' );
 		await providerForm
@@ -265,6 +369,9 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 		await openWorkspace( page, 'Advanced', 'onesmtp-advanced' );
 		const advanced = page.locator( '#onesmtp-advanced' );
 		await advanced.locator( '[data-onesmtp-subtab="diagnostics"]' ).click();
+		await advanced
+			.getByRole( 'link', { name: 'View report', exact: true } )
+			.click();
 		await expect( advanced ).toContainText( 'Scheduler availability' );
 		await expect( advanced ).toContainText( 'Unavailable' );
 		await expect( advanced ).toContainText( 'Overdue retries' );
@@ -287,7 +394,7 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 		await openWorkspace( page, 'Advanced', 'onesmtp-advanced' );
 
 		const alerts = page.locator( '#onesmtp-advanced' );
-		await alerts.locator( '[data-onesmtp-subtab="diagnostics"]' ).click();
+		await alerts.locator( '[data-onesmtp-subtab="alerts"]' ).click();
 		await expect( alerts ).toContainText(
 			'Review privacy-safe alert events'
 		);
@@ -300,10 +407,6 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 		await expect( alerts ).toContainText( 'Open' );
 		await expect( alerts ).toContainText( 'Acknowledged' );
 		await expect( alerts ).toContainText( 'Actor #42' );
-		await expect( alerts ).toContainText( '"recipient_count": 1' );
-		await expect( alerts ).toContainText( '"recipient_domains"' );
-		await expect( alerts ).toContainText( 'example.test' );
-		await expect( alerts ).toContainText( '[REDACTED]' );
 
 		await expect( alerts ).not.toContainText(
 			'fixture-alert-token-never-rendered'
@@ -347,6 +450,14 @@ test.describe( 'Aculect Mail admin browser smoke', () => {
 				onesmtp_alert_event_id: '45',
 				onesmtp_alert_history_nonce: 'test-nonce',
 			} );
+		await alerts
+			.getByRole( 'link', { name: 'View context', exact: true } )
+			.first()
+			.click();
+		await expect( alerts ).toContainText( '"recipient_count": 1' );
+		await expect( alerts ).toContainText( '"recipient_domains"' );
+		await expect( alerts ).toContainText( 'example.test' );
+		await expect( alerts ).toContainText( '[REDACTED]' );
 	} );
 
 	test( 'notification toggles disable fields and omit them from form submission', async ( {

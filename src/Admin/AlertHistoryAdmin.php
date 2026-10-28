@@ -58,6 +58,13 @@ final class AlertHistoryAdmin
 
         $this->renderStatusNotice();
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only context view; acknowledgement remains nonce-protected.
+        $view = isset($_GET['onesmtp_alert_view']) ? sanitize_key(wp_unslash( (string) $_GET['onesmtp_alert_view'])) : '';
+        if ($view === 'context') {
+            $this->renderContextView();
+            return;
+        }
+
         $events = $this->alerts->recent(20);
         if ($events === []) {
             echo '<div class="notice notice-info inline"><p>' . esc_html__('No alert events have been recorded yet.', 'onesmtp') . '</p></div>';
@@ -83,16 +90,39 @@ final class AlertHistoryAdmin
         echo '<article class="onesmtp-alert-event"><div class="onesmtp-panel-heading"><h4>#' . esc_html( (string) $eventId) . ' · ' . esc_html(str_replace('_', ' ', (string) ($event['event_type'] ?? ''))) . '</h4>';
         AdminUi::badge($status === 'acknowledged' ? __('Acknowledged', 'onesmtp') : __('Open', 'onesmtp'), $status === 'acknowledged' ? 'neutral' : 'warning');
         echo '</div><p>' . esc_html( (string) ($event['created_at'] ?? '')) . '</p><strong>' . esc_html( (string) ($event['summary'] ?? '')) . '</strong>';
-        echo '<details><summary>' . esc_html__('Safe event context', 'onesmtp') . '</summary>';
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- contextPreview() returns escaped readonly markup.
-        echo $this->contextPreview( (array) ($event['context'] ?? []), $eventId);
-        echo '</details>';
+        $contextUrl = add_query_arg(
+            [
+                'onesmtp_alert_view' => 'context',
+                self::EVENT_ID_NAME => $eventId,
+            ],
+            admin_url('options-general.php?page=onesmtp&tab=onesmtp-advanced#onesmtp-alerts')
+        );
+        echo '<p><a class="button" href="' . esc_url($contextUrl) . '">' . esc_html__('View context', 'onesmtp') . '</a></p>';
         if ($status === 'acknowledged') {
             echo '<p>' . esc_html( (string) ($event['acknowledged_at'] ?? '')) . ' · ' . esc_html__('Actor', 'onesmtp') . ' #' . esc_html( (string) (int) ($event['acknowledged_by'] ?? 0)) . '</p>';
         } else {
             $this->renderAcknowledgeForm($eventId);
         }
         echo '</article>';
+    }
+
+    private function renderContextView(): void
+    {
+        echo '<p><a class="button" href="' . esc_url(admin_url('options-general.php?page=onesmtp&tab=onesmtp-advanced#onesmtp-alerts')) . '">' . esc_html__('Back to alert history', 'onesmtp') . '</a></p>';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only alert selection; acknowledgement remains nonce-protected.
+        $requestedId = isset($_GET[ self::EVENT_ID_NAME ]) ? trim(wp_unslash( (string) $_GET[ self::EVENT_ID_NAME ])) : '';
+        $eventId = ctype_digit($requestedId) ? absint($requestedId) : 0;
+        $event = $eventId > 0 ? $this->alerts->findAlert($eventId) : null;
+        if ($event === null) {
+            echo '<div class="notice notice-warning inline"><p>' . esc_html__('This alert event is no longer available. Return to alert history and choose another event.', 'onesmtp') . '</p></div>';
+            return;
+        }
+
+        echo '<h4>#' . esc_html( (string) $eventId) . ' · ' . esc_html(str_replace('_', ' ', (string) ($event['event_type'] ?? ''))) . '</h4><p>' . esc_html( (string) ($event['created_at'] ?? '')) . '</p><p>' . esc_html( (string) ($event['summary'] ?? '')) . '</p>';
+        echo '<div class="onesmtp-alert-context"><p>' . esc_html__('Safe event context', 'onesmtp') . '</p>';
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- contextPreview() returns escaped readonly markup.
+        echo $this->contextPreview( (array) ($event['context'] ?? []), $eventId);
+        echo '</div>';
     }
 
     /**

@@ -102,13 +102,24 @@ final class DashboardAdminTest extends TestCase
         $html = $this->render();
 
         self::assertStringContainsString('Last 24 hours', $html);
-        self::assertStringContainsString('<td data-label="Sent attempts">3</td>', $html);
-        self::assertStringContainsString('<td data-label="Failed attempts">2</td>', $html);
-        self::assertStringContainsString('<td data-label="Retry attempts">1</td>', $html);
-        self::assertStringContainsString('Total pending</th><td>7</td>', $html);
-        self::assertStringContainsString('Provider activity', $html);
+        self::assertStringContainsString('2 queued · 4 scheduled · 1 running', $html);
+        self::assertStringContainsString('Compare periods', $html);
+        self::assertStringNotContainsString('Provider contribution', $html);
+        self::assertStringNotContainsString('Delivery activity', $html);
+        self::assertSame(1, substr_count($html, '<table'));
+        self::assertStringContainsString('Provider performance', $html);
+        self::assertStringNotContainsString('<details', $html);
+        self::assertStringContainsString('Review messages', $html);
         self::assertStringContainsString(esc_attr($longName), $html);
         self::assertStringContainsString(esc_html(substr($longName, 0, 77) . '...'), $html);
+
+        $_GET['onesmtp_analytics_view'] = 'comparison';
+        $comparison = $this->render();
+        self::assertStringContainsString('Back to analytics', $comparison);
+        self::assertStringContainsString('Provider contribution', $comparison);
+        self::assertStringContainsString('Delivery activity', $comparison);
+        self::assertStringContainsString('<td data-label="Sent attempts">3</td>', $comparison);
+        self::assertStringNotContainsString('onesmtp-provider-performance', $comparison);
     }
 
     public function test_render_denies_users_without_log_visibility_capability(): void
@@ -156,6 +167,8 @@ final class DashboardAdminTest extends TestCase
         $html = $this->render();
         self::assertStringContainsString('<strong>No data</strong>', $html);
         self::assertStringNotContainsString('<strong>0.0%</strong>', $html);
+        self::assertStringNotContainsString('data-onesmtp-dataviews="analytics-providers"', $html);
+        self::assertStringContainsString('Try a longer reporting window', $html);
     }
 
     private function render(): string

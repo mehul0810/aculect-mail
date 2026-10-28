@@ -19,18 +19,12 @@ final class SettingsView
         echo '</nav></div>';
         echo '<div class="onesmtp-settings-group" data-onesmtp-settings-group="general"><div class="onesmtp-sender-layout">';
         self::sender($identity);
-        echo '<aside class="onesmtp-sender-preview"><div class="onesmtp-dark-panel"><p class="onesmtp-eyebrow">' . esc_html__('Inbox preview', 'onesmtp') . '</p><h3 data-onesmtp-preview-name>' . esc_html( (string) ($identity['from_name'] ?: __('Sender name', 'onesmtp'))) . '</h3><p data-onesmtp-preview-email>' . esc_html( (string) ($identity['from_email'] ?: __('Not configured', 'onesmtp'))) . '</p><strong>' . esc_html__('Your WordPress notification', 'onesmtp') . '</strong><p>' . esc_html__('Example identity. This preview does not send an email.', 'onesmtp') . '</p></div><div class="onesmtp-context-note">';
-        AdminUi::icon('shield');
-        echo '<h3>' . esc_html__('Keep your identity consistent', 'onesmtp') . '</h3><p>' . esc_html__('Match your sender domain to the domain verified with your provider. Send a test email after saving.', 'onesmtp') . '</p>';
-        AdminUi::link(__('Open setup', 'onesmtp'), admin_url('options-general.php?page=onesmtp&tab=onesmtp-overview#onesmtp-overview'));
-        echo '</div></aside></div></div>';
+        echo '<aside class="onesmtp-sender-preview"><div class="onesmtp-dark-panel"><p class="onesmtp-eyebrow">' . esc_html__('Sender preview', 'onesmtp') . '</p><h3 data-onesmtp-preview-name>' . esc_html( (string) ($identity['from_name'] ?: __('Sender name', 'onesmtp'))) . '</h3><p data-onesmtp-preview-email>' . esc_html( (string) ($identity['from_email'] ?: __('Not configured', 'onesmtp'))) . '</p></div></aside></div></div>';
         echo '<div class="onesmtp-settings-group" data-onesmtp-settings-group="notifications"><div class="onesmtp-notifications-layout">';
         self::alerts($alerts);
         echo '<div>';
         self::summary($summary);
-        echo '<aside class="onesmtp-context-note">';
-        AdminUi::icon('shield');
-        echo '<h3>' . esc_html__('Operational signals only', 'onesmtp') . '</h3><p>' . esc_html__('Message bodies, full recipient addresses, raw headers, secrets, attachment paths, and diagnostic payloads stay out of notifications.', 'onesmtp') . '</p></aside></div></div></div>';
+        echo '</div></div></div>';
     }
 
     private static function sender(array $values): void

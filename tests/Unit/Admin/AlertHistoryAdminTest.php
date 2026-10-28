@@ -75,10 +75,23 @@ final class AlertHistoryAdminTest extends TestCase
         $html = (string) ob_get_clean();
 
         self::assertStringContainsString('#22', $html);
-        self::assertStringContainsString('textarea', $html);
-        self::assertStringContainsString('[REDACTED]', $html);
+        self::assertStringContainsString('View context', $html);
+        self::assertStringContainsString('Acknowledge', $html);
+        self::assertStringContainsString('onesmtp_alert_event_id=22', $html);
+        self::assertStringNotContainsString('textarea', $html);
         self::assertStringNotContainsString('private-token', $html);
         self::assertStringNotContainsString('raw-header-token', $html);
+
+        $_GET['onesmtp_alert_view'] = 'context';
+        $_GET['onesmtp_alert_event_id'] = '22';
+        ob_start();
+        (new AlertHistoryAdmin())->render();
+        $context = (string) ob_get_clean();
+        self::assertStringContainsString('Back to alert history', $context);
+        self::assertStringContainsString('textarea', $context);
+        self::assertStringContainsString('[REDACTED]', $context);
+        self::assertStringNotContainsString('private-token', $context);
+        self::assertStringNotContainsString('raw-header-token', $context);
     }
 
     public function test_acknowledge_requires_manage_capability(): void
@@ -92,6 +105,20 @@ final class AlertHistoryAdminTest extends TestCase
         $this->expectExceptionMessage('You do not have permission to acknowledge Aculect Mail alerts.');
 
         (new AlertHistoryAdmin())->handleRequest();
+    }
+
+    public function test_context_view_handles_invalid_event_id_without_exposing_a_form(): void
+    {
+        $_GET['onesmtp_alert_view'] = 'context';
+        $_GET['onesmtp_alert_event_id'] = '22x';
+
+        ob_start();
+        (new AlertHistoryAdmin())->render();
+        $html = (string) ob_get_clean();
+
+        self::assertStringContainsString('Back to alert history', $html);
+        self::assertStringContainsString('This alert event is no longer available.', $html);
+        self::assertStringNotContainsString('onesmtp_alert_history_action', $html);
     }
 
     public function test_acknowledge_requires_valid_nonce(): void
