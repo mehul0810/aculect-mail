@@ -23,6 +23,8 @@
 
 ## Settings and navigation
 
+From the WordPress Plugins screen, select **Settings** in the Aculect Mail row to open its settings directly.
+
 **Settings → General** controls sender defaults and individual header overrides. **Notifications** controls failure alerts and weekly summaries. Recipient and webhook fields disable when their channel is off; saving the disabled channel retains its previously saved values. Enabling a channel still requires usable recipients or an HTTPS endpoint before it can send.
 
 **Advanced** groups delivery controls, privacy/logging, settings transfer, and diagnostics. Each form saves separately. On a narrow screen, use the current-section picker and the Advanced section selector. Legacy Delivery links still open Overview.

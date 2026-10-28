@@ -20,13 +20,31 @@ final class AdminPageTest extends TestCase
         parent::setUp();
 
         $GLOBALS['onesmtp_test_actions'] = [];
+        $GLOBALS['onesmtp_test_filters'] = [];
         $GLOBALS['onesmtp_test_removed_actions'] = [];
         $GLOBALS['onesmtp_test_admin_menu_pages'] = [];
         $GLOBALS['onesmtp_test_admin_submenu_pages'] = [];
         $GLOBALS['onesmtp_test_current_user_can'] = true;
+        unset($GLOBALS['onesmtp_test_current_user_caps']);
         $GLOBALS['wpdb'] = new FakeWpdb();
         unset($GLOBALS['onesmtp_test_wp_die']);
         unset($_GET['tab']);
+    }
+
+    public function test_plugin_action_link_opens_settings_and_preserves_existing_links(): void
+    {
+        $page = new AdminPage();
+        $page->registerHooks();
+
+        $links = apply_filters('plugin_action_links_' . plugin_basename(ONESMTP_FILE), ['deactivate' => 'Deactivate']);
+
+        self::assertSame([
+            'settings' => '<a href="https://example.org/wp-admin/options-general.php?page=onesmtp&amp;tab=onesmtp-settings">Settings</a>',
+            'deactivate' => 'Deactivate',
+        ], $links);
+
+        $GLOBALS['onesmtp_test_current_user_can'] = false;
+        self::assertSame(['deactivate' => 'Deactivate'], apply_filters('plugin_action_links_' . plugin_basename(ONESMTP_FILE), ['deactivate' => 'Deactivate']));
     }
 
     public function test_register_hooks_adds_admin_menu_callback(): void
@@ -170,6 +188,18 @@ final class AdminPageTest extends TestCase
         self::assertStringContainsString('id="onesmtp-analytics"', $output);
         self::assertStringContainsString('id="onesmtp-overview"', $output);
         self::assertStringContainsString('class="nav-tab nav-tab-active" data-onesmtp-workspace-link="onesmtp-analytics"', $output);
+    }
+
+    public function test_settings_link_tab_resolves_to_settings_screen(): void
+    {
+        $_GET['tab'] = 'onesmtp-settings';
+        $page = new AdminPage();
+
+        ob_start();
+        $page->render();
+        $output = (string) ob_get_clean();
+
+        self::assertStringContainsString('class="nav-tab nav-tab-active" data-onesmtp-workspace-link="onesmtp-settings"', $output);
     }
 
     public function test_render_resolves_legacy_advanced_tab_server_side(): void

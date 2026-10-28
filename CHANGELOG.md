@@ -18,6 +18,7 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ### Added
 
+- Add a Settings link to the Aculect Mail row on the Plugins screen.
 - Quiet in-product SureMail compatibility analysis and opt-in default-connection import, with inactive-by-default providers and AES-GCM credential re-encryption.
 - Zoho Mail, Emailit, and Netcore transactional API adapters.
 - Explicit staging simulation mode that captures outgoing mail as Simulated without contacting a provider.

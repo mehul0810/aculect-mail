@@ -67,6 +67,7 @@ final class AdminPage
 
     public function registerHooks(): void
     {
+        add_filter('plugin_action_links_' . plugin_basename(ONESMTP_FILE), [$this, 'addSettingsLink']);
         add_action('admin_menu', [$this, 'registerMenu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('admin_notices', [$this, 'suppressExternalNotices'], -PHP_INT_MAX);
@@ -76,6 +77,20 @@ final class AdminPage
         add_action('admin_init', [$this->settings, 'handleRequest']);
         add_action('admin_init', [$this->diagnostics, 'handleRequest']);
         add_action('admin_init', [$this->alerts, 'handleRequest']);
+    }
+
+    /**
+     * @param array<array-key,string> $links Plugin action links.
+     * @return array<array-key,string>
+     */
+    public function addSettingsLink(array $links): array
+    {
+        if ( ! current_user_can(Capabilities::MANAGE_PLUGIN)) {
+            return $links;
+        }
+
+        $url = admin_url('options-general.php?page=onesmtp&tab=onesmtp-settings');
+        return ['settings' => '<a href="' . esc_url($url) . '">' . esc_html__('Settings', 'onesmtp') . '</a>'] + $links;
     }
 
     /**

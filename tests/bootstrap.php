@@ -25,6 +25,10 @@ if (! defined('ONESMTP_VERSION')) {
     define('ONESMTP_VERSION', '0.1.0');
 }
 
+if (! defined('ONESMTP_FILE')) {
+    define('ONESMTP_FILE', dirname(__DIR__) . '/onesmtp.php');
+}
+
 if (! defined('ONESMTP_TESTING')) {
     define('ONESMTP_TESTING', true);
 }
@@ -253,6 +257,13 @@ if (! function_exists('dbDelta')) {
         $GLOBALS['onesmtp_test_dbdelta_queries'][] = $queries;
 
         return [];
+    }
+}
+
+if (! function_exists('plugin_basename')) {
+    function plugin_basename(string $file): string
+    {
+        return basename(dirname($file)) . '/' . basename($file);
     }
 }
 
