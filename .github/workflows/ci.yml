@@ -140,14 +140,14 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          test -s onesmtp.zip
-          test -s onesmtp.zip.sha256
-          shasum -a 256 -c onesmtp.zip.sha256
+          test -s aculect-mail.zip
+          test -s aculect-mail.zip.sha256
+          shasum -a 256 -c aculect-mail.zip.sha256
 
       - name: Upload verification artifact
         uses: actions/upload-artifact@v4
         with:
           name: onesmtp-package-verification
           path: |
-            dist/onesmtp.zip
-            dist/onesmtp.zip.sha256
+            dist/aculect-mail.zip
+            dist/aculect-mail.zip.sha256

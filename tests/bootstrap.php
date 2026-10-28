@@ -26,7 +26,7 @@ if (! defined('ONESMTP_VERSION')) {
 }
 
 if (! defined('ONESMTP_FILE')) {
-    define('ONESMTP_FILE', dirname(__DIR__) . '/onesmtp.php');
+    define('ONESMTP_FILE', dirname(__DIR__) . '/aculect-mail.php');
 }
 
 if (! defined('ONESMTP_TESTING')) {

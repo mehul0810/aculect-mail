@@ -31,4 +31,6 @@ Retention scheduling runs on `init` after Action Scheduler's store initializatio
 - Confirm plugin metadata declares `Text Domain: onesmtp` and `Domain Path: /languages`.
 - Regenerate the translation template before release packaging:
   - `composer i18n:make-pot`
-- Review `languages/onesmtp.pot` when adding or changing user-facing strings.
+- Review `languages/aculect-mail.pot` when adding or changing user-facing strings.
+
+The plugin entry file is now `aculect-mail.php`. Existing installations using the previous entry filename must reactivate Aculect Mail after replacing the files. Preserve existing options and tables; do not uninstall the plugin as part of this rename.

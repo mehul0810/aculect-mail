@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Aculect Mail 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/mehul0810/aculect-mail/issues\n"
-"POT-Creation-Date: 2026-10-28 17:38+0000\n"
+"POT-Creation-Date: 2026-10-28 17:49+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,7 +13,7 @@ msgstr ""
 msgid " and more"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1045
+#: src/Admin/LogAdmin.php:1047
 msgid "%.1f KB"
 msgstr ""
 
@@ -29,7 +29,7 @@ msgstr ""
 msgid "%1$d queued · %2$d scheduled · %3$d running · %4$d overdue"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:980
+#: src/Admin/LogAdmin.php:982
 msgid "%1$d recipients across %2$s"
 msgstr ""
 
@@ -37,15 +37,15 @@ msgstr ""
 msgid "%1$s · Priority %2$d · Weight %3$d"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1014
+#: src/Admin/LogAdmin.php:1016
 msgid "%d attachment"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1014
+#: src/Admin/LogAdmin.php:1016
 msgid "%d attachments"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1038
+#: src/Admin/LogAdmin.php:1040
 msgid "%d bytes"
 msgstr ""
 
@@ -77,11 +77,11 @@ msgstr ""
 msgid "(disabled)"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:995
+#: src/Admin/LogAdmin.php:997
 msgid "0 attachments"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:962
+#: src/Admin/LogAdmin.php:964
 msgid "0 recipients"
 msgstr ""
 
@@ -97,7 +97,7 @@ msgstr ""
 msgid "A clear path from your first connection to a tested sending setup."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:794
+#: src/Admin/LogAdmin.php:796
 msgid "A manual resend starts another attempt and does not prove that a failed provider is healthy."
 msgstr ""
 
@@ -105,7 +105,7 @@ msgstr ""
 msgid "A new message"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:449
+#: src/Admin/LogAdmin.php:451
 msgid "A recipient may already have received the original. Resending can create duplicate delivery. Original attachments cannot be restored from logged metadata."
 msgstr ""
 
@@ -117,11 +117,11 @@ msgstr ""
 msgid "A test message will be sent using the selected active provider."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:890
+#: src/Admin/LogAdmin.php:892
 msgid "A valid WordPress admin email is required before Aculect Mail can forward log summaries."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1380
+#: src/Admin/LogAdmin.php:1382
 msgid "A valid WordPress admin email is required before forwarding log summaries."
 msgstr ""
 
@@ -173,7 +173,7 @@ msgstr ""
 msgid "Acknowledgement records review; it does not resolve the delivery problem."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:406
+#: src/Admin/LogAdmin.php:408
 #: src/Admin/ProviderAdmin.php:208
 msgid "Action"
 msgstr ""
@@ -212,7 +212,7 @@ msgstr ""
 #: src/Admin/LogAdmin.php:199
 #: src/Admin/LogAdmin.php:223
 #: src/Admin/LogAdmin.php:260
-#: src/Admin/LogAdmin.php:641
+#: src/Admin/LogAdmin.php:643
 #: src/Admin/ProviderAdmin.php:51
 #: src/Admin/QueueDiagnosticsAdmin.php:44
 #: src/Admin/DashboardAdmin.php:37
@@ -250,7 +250,7 @@ msgstr ""
 msgid "Aculect Mail diagnostics denied"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:650
+#: src/Admin/LogAdmin.php:652
 #: src/Admin/SettingsAdmin.php:508
 msgid "Aculect Mail export denied"
 msgstr ""
@@ -304,7 +304,7 @@ msgstr ""
 msgid "Aculect Mail settings imported. Secrets and recipient fields were excluded."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:928
+#: src/Admin/LogAdmin.php:930
 msgid "Aculect Mail stores metadata only. File contents and raw server paths are not stored or displayed."
 msgstr ""
 
@@ -408,15 +408,15 @@ msgstr ""
 msgid "Analyze SureMail setup"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:475
+#: src/Admin/LogAdmin.php:477
 msgid "Any provider"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:467
+#: src/Admin/LogAdmin.php:469
 msgid "Any status"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:387
+#: src/Admin/LogAdmin.php:389
 #: src/Admin/DashboardAdmin.php:61
 msgid "Apply"
 msgstr ""
@@ -425,7 +425,7 @@ msgstr ""
 msgid "Apply this value even when a message supplies its own."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:942
+#: src/Admin/LogAdmin.php:944
 msgid "Attachment"
 msgstr ""
 
@@ -441,7 +441,7 @@ msgstr ""
 msgid "Attachment logging settings saved."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:927
+#: src/Admin/LogAdmin.php:929
 msgid "Attachment metadata"
 msgstr ""
 
@@ -450,23 +450,23 @@ msgid "Attachment metadata is deleted with the parent email log according to the
 msgstr ""
 
 #: src/Providers/ProviderTypes.php:371
-#: src/Admin/LogAdmin.php:804
+#: src/Admin/LogAdmin.php:806
 msgid "Attachments"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:789
+#: src/Admin/LogAdmin.php:791
 msgid "Attempt %1$d · %2$s"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:780
+#: src/Admin/LogAdmin.php:782
 msgid "Attempt lineage"
 msgstr ""
 
 #: src/Admin/LogAdmin.php:307
-#: src/Admin/LogAdmin.php:326
-#: src/Admin/LogAdmin.php:406
-#: src/Admin/LogAdmin.php:438
-#: src/Admin/LogAdmin.php:802
+#: src/Admin/LogAdmin.php:328
+#: src/Admin/LogAdmin.php:408
+#: src/Admin/LogAdmin.php:440
+#: src/Admin/LogAdmin.php:804
 msgid "Attempts"
 msgstr ""
 
@@ -484,8 +484,8 @@ msgstr ""
 msgid "BCC (optional)"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:764
-#: src/Admin/LogAdmin.php:773
+#: src/Admin/LogAdmin.php:766
+#: src/Admin/LogAdmin.php:775
 msgid "Back to activity"
 msgstr ""
 
@@ -522,31 +522,31 @@ msgstr ""
 msgid "Brevo"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:382
+#: src/Admin/LogAdmin.php:384
 msgid "Bulk action"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1365
+#: src/Admin/LogAdmin.php:1367
 msgid "Bulk resend action could not be completed."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1358
+#: src/Admin/LogAdmin.php:1360
 msgid "Bulk resend completed for %1$d messages; %2$d selected messages failed or were skipped."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1353
+#: src/Admin/LogAdmin.php:1355
 msgid "Bulk resend completed for %d failed message."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1353
+#: src/Admin/LogAdmin.php:1355
 msgid "Bulk resend completed for %d failed messages."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1362
+#: src/Admin/LogAdmin.php:1364
 msgid "Bulk resend did not complete for the selected messages. Only failed logs with stored safe payloads can be resent."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:449
+#: src/Admin/LogAdmin.php:451
 msgid "Cancel"
 msgstr ""
 
@@ -587,7 +587,7 @@ msgstr ""
 msgid "Circuit open"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:371
+#: src/Admin/LogAdmin.php:373
 msgid "Clear filters"
 msgstr ""
 
@@ -628,7 +628,7 @@ msgstr ""
 msgid "Confirm WP-Cron or the Action Scheduler runner is processing jobs, then review recent message logs for safe resend decisions."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:449
+#: src/Admin/LogAdmin.php:451
 msgid "Confirm resend"
 msgstr ""
 
@@ -679,7 +679,7 @@ msgstr ""
 msgid "Create an API key with SendHttp access and verify the sender domain."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:807
+#: src/Admin/LogAdmin.php:809
 msgid "Created"
 msgstr ""
 
@@ -731,7 +731,7 @@ msgstr ""
 msgid "Delivery activity"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:368
+#: src/Admin/LogAdmin.php:370
 msgid "Delivery attempts will appear here after WordPress sends its first message."
 msgstr ""
 
@@ -747,7 +747,7 @@ msgstr ""
 msgid "Delivery rate limits"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:794
+#: src/Admin/LogAdmin.php:796
 msgid "Delivery status"
 msgstr ""
 
@@ -800,7 +800,7 @@ msgstr ""
 msgid "Download safe settings export"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:780
+#: src/Admin/LogAdmin.php:782
 msgid "Each attempt belongs to this message. Provider acceptance does not confirm inbox placement."
 msgstr ""
 
@@ -885,15 +885,15 @@ msgstr ""
 msgid "Existing message headers are preserved. Overrides are available in Settings."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:516
+#: src/Admin/LogAdmin.php:518
 msgid "Export CSV"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:516
+#: src/Admin/LogAdmin.php:518
 msgid "Export filtered log CSV"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:932
+#: src/Admin/LogAdmin.php:934
 msgid "Extension"
 msgstr ""
 
@@ -928,11 +928,11 @@ msgstr ""
 msgid "Failure alerts"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:931
+#: src/Admin/LogAdmin.php:933
 msgid "Filename"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:507
+#: src/Admin/LogAdmin.php:509
 msgid "Filter logs"
 msgstr ""
 
@@ -948,16 +948,16 @@ msgstr ""
 msgid "For staging and development only. Aculect Mail captures outgoing messages in the email log as Simulated and never contacts a provider or reports them as delivered."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1383
+#: src/Admin/LogAdmin.php:1385
 msgid "Forward action could not be completed."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:880
-#: src/Admin/LogAdmin.php:906
+#: src/Admin/LogAdmin.php:882
+#: src/Admin/LogAdmin.php:908
 msgid "Forward safe summary"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:486
+#: src/Admin/LogAdmin.php:488
 msgid "From"
 msgstr ""
 
@@ -1064,7 +1064,7 @@ msgstr ""
 msgid "Inconclusive"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:442
+#: src/Admin/LogAdmin.php:444
 msgid "Inspect"
 msgstr ""
 
@@ -1083,12 +1083,12 @@ msgstr ""
 msgid "Last 7 days"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:406
-#: src/Admin/LogAdmin.php:442
+#: src/Admin/LogAdmin.php:408
+#: src/Admin/LogAdmin.php:444
 msgid "Last activity"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:792
+#: src/Admin/LogAdmin.php:794
 msgid "Latency"
 msgstr ""
 
@@ -1100,11 +1100,11 @@ msgstr ""
 msgid "Limits repeated notifications for the same condition."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:798
+#: src/Admin/LogAdmin.php:800
 msgid "Lineage UUID"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:495
+#: src/Admin/LogAdmin.php:497
 msgid "Lineage UUID, log ID, or recipient hash"
 msgstr ""
 
@@ -1149,32 +1149,32 @@ msgstr ""
 msgid "Manual connection setup"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:827
+#: src/Admin/LogAdmin.php:829
 msgid "Manual resend"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1334
+#: src/Admin/LogAdmin.php:1336
 msgid "Manual resend action could not be completed."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1328
+#: src/Admin/LogAdmin.php:1330
 msgid "Manual resend completed. Review the attempt lineage for the recorded provider and result."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1329
+#: src/Admin/LogAdmin.php:1331
 msgid "Manual resend failed safely. Review the latest attempt lineage for sanitized failure context."
 msgstr ""
 
 #: src/Admin/LogAdmin.php:305
-#: src/Admin/LogAdmin.php:406
+#: src/Admin/LogAdmin.php:408
 msgid "Message"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:776
+#: src/Admin/LogAdmin.php:778
 msgid "Message #%d"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:797
+#: src/Admin/LogAdmin.php:799
 msgid "Message ID"
 msgstr ""
 
@@ -1194,18 +1194,18 @@ msgstr ""
 msgid "Netcore"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:552
+#: src/Admin/LogAdmin.php:554
 msgid "Next"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:552
+#: src/Admin/LogAdmin.php:554
 msgid "Next log page"
 msgstr ""
 
 #: src/Admin/LogAdmin.php:309
-#: src/Admin/LogAdmin.php:328
-#: src/Admin/LogAdmin.php:794
-#: src/Admin/LogAdmin.php:806
+#: src/Admin/LogAdmin.php:330
+#: src/Admin/LogAdmin.php:796
+#: src/Admin/LogAdmin.php:808
 #: src/Admin/QueueDiagnosticsAdmin.php:129
 msgid "Next retry"
 msgstr ""
@@ -1234,7 +1234,7 @@ msgstr ""
 msgid "No data"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:782
+#: src/Admin/LogAdmin.php:784
 msgid "No delivery attempts have been recorded for this message yet."
 msgstr ""
 
@@ -1242,11 +1242,11 @@ msgstr ""
 msgid "No delivery data yet"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:842
+#: src/Admin/LogAdmin.php:844
 msgid "No eligible active providers are available for manual resend."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:367
+#: src/Admin/LogAdmin.php:369
 msgid "No email activity yet"
 msgstr ""
 
@@ -1262,7 +1262,7 @@ msgstr ""
 msgid "No message content is shared"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:366
+#: src/Admin/LogAdmin.php:368
 msgid "No messages match these filters"
 msgstr ""
 
@@ -1283,14 +1283,14 @@ msgstr ""
 msgid "No supported default SureMail connection was found. Nothing will be imported."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1203
-#: src/Admin/LogAdmin.php:1501
+#: src/Admin/LogAdmin.php:1205
+#: src/Admin/LogAdmin.php:1503
 msgid "None"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:794
-#: src/Admin/LogAdmin.php:806
-#: src/Admin/LogAdmin.php:1200
+#: src/Admin/LogAdmin.php:796
+#: src/Admin/LogAdmin.php:808
+#: src/Admin/LogAdmin.php:1202
 #: src/Admin/QueueDiagnosticsAdmin.php:129
 msgid "None scheduled"
 msgstr ""
@@ -1303,15 +1303,15 @@ msgstr ""
 msgid "Not connected"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:990
+#: src/Admin/LogAdmin.php:992
 msgid "Not logged"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:792
+#: src/Admin/LogAdmin.php:794
 msgid "Not recorded"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1214
+#: src/Admin/LogAdmin.php:1216
 msgid "Not selected"
 msgstr ""
 
@@ -1355,11 +1355,11 @@ msgstr ""
 msgid "One email with aggregate delivery health: sent, failed, retried, pending, and failover counts."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:428
+#: src/Admin/LogAdmin.php:430
 msgid "Only failed messages can be selected for bulk resend."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1313
+#: src/Admin/LogAdmin.php:1315
 msgid "Only queued or scheduled messages can be moved to the front of the queue."
 msgstr ""
 
@@ -1391,7 +1391,7 @@ msgstr ""
 msgid "Open until manually closed."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:847
+#: src/Admin/LogAdmin.php:849
 msgid "Original attachments cannot be restored from logged metadata."
 msgstr ""
 
@@ -1423,7 +1423,7 @@ msgstr ""
 msgid "PHP mail"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:544
+#: src/Admin/LogAdmin.php:546
 msgid "Page %1$d of %2$d (%3$d log entries)"
 msgstr ""
 
@@ -1431,7 +1431,7 @@ msgstr ""
 msgid "Password"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:500
+#: src/Admin/LogAdmin.php:502
 msgid "Per page"
 msgstr ""
 
@@ -1439,11 +1439,11 @@ msgstr ""
 msgid "Per-minute limit"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1077
+#: src/Admin/LogAdmin.php:1079
 msgid "Plugin: %s"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1080
+#: src/Admin/LogAdmin.php:1082
 msgid "Plugin: Unknown plugin"
 msgstr ""
 
@@ -1452,11 +1452,11 @@ msgstr ""
 msgid "Postmark"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:538
+#: src/Admin/LogAdmin.php:540
 msgid "Previous"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:538
+#: src/Admin/LogAdmin.php:540
 msgid "Previous log page"
 msgstr ""
 
@@ -1487,23 +1487,23 @@ msgstr ""
 msgid "Privacy-safe diagnostic report"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:338
+#: src/Admin/LogAdmin.php:340
 msgid "Processing"
 msgstr ""
 
 #: src/Admin/ProviderCapabilityMatrix.php:28
 #: src/Admin/DeliveryAdmin.php:40
 #: src/Admin/SetupWizard.php:367
-#: src/Admin/LogAdmin.php:406
-#: src/Admin/LogAdmin.php:438
-#: src/Admin/LogAdmin.php:473
+#: src/Admin/LogAdmin.php:408
+#: src/Admin/LogAdmin.php:440
+#: src/Admin/LogAdmin.php:475
 #: src/Admin/DashboardAdmin.php:219
 #: src/Admin/DashboardAdmin.php:265
 msgid "Provider"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1221
-#: src/Admin/LogAdmin.php:1286
+#: src/Admin/LogAdmin.php:1223
+#: src/Admin/LogAdmin.php:1288
 #: src/Admin/ProviderAdmin.php:319
 msgid "Provider #%d"
 msgstr ""
@@ -1564,7 +1564,7 @@ msgstr ""
 msgid "Provider health"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:792
+#: src/Admin/LogAdmin.php:794
 msgid "Provider message"
 msgstr ""
 
@@ -1572,7 +1572,7 @@ msgstr ""
 msgid "Provider message ID"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:852
+#: src/Admin/LogAdmin.php:854
 msgid "Provider override"
 msgstr ""
 
@@ -1588,7 +1588,7 @@ msgstr ""
 msgid "Provider sender"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:803
+#: src/Admin/LogAdmin.php:805
 msgid "Provider switches"
 msgstr ""
 
@@ -1610,7 +1610,7 @@ msgstr ""
 msgid "Publish the SPF, DKIM, and DMARC TXT records supplied by %s for this sender domain."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1316
+#: src/Admin/LogAdmin.php:1318
 msgid "Queue action could not be completed."
 msgstr ""
 
@@ -1642,7 +1642,7 @@ msgstr ""
 msgid "Ready to import:"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:359
+#: src/Admin/LogAdmin.php:361
 msgid "Recent messages"
 msgstr ""
 
@@ -1650,11 +1650,11 @@ msgstr ""
 msgid "Recipient email"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:497
+#: src/Admin/LogAdmin.php:499
 msgid "Recipient hash"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:805
+#: src/Admin/LogAdmin.php:807
 msgid "Recipients"
 msgstr ""
 
@@ -1702,19 +1702,19 @@ msgstr ""
 msgid "Resend"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:866
+#: src/Admin/LogAdmin.php:868
 msgid "Resend message"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:385
+#: src/Admin/LogAdmin.php:387
 msgid "Resend selected failed messages"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:449
+#: src/Admin/LogAdmin.php:451
 msgid "Resend this email?"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:847
+#: src/Admin/LogAdmin.php:849
 msgid "Resending may create duplicate delivery."
 msgstr ""
 
@@ -1738,7 +1738,7 @@ msgstr ""
 msgid "Retry attempts"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:335
+#: src/Admin/LogAdmin.php:337
 msgid "Retry now"
 msgstr ""
 
@@ -1845,15 +1845,15 @@ msgstr ""
 msgid "Safe event context"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1378
+#: src/Admin/LogAdmin.php:1380
 msgid "Safe log summary could not be forwarded."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1377
+#: src/Admin/LogAdmin.php:1379
 msgid "Safe log summary forwarded to the verified site admin address."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:795
+#: src/Admin/LogAdmin.php:797
 msgid "Safe metadata"
 msgstr ""
 
@@ -1910,7 +1910,7 @@ msgstr ""
 msgid "Scheduler unavailable"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:494
+#: src/Admin/LogAdmin.php:496
 msgid "Search"
 msgstr ""
 
@@ -1922,20 +1922,20 @@ msgstr ""
 msgid "See provider acceptance, failures, and recovery without losing the detail."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:404
-#: src/Admin/LogAdmin.php:420
+#: src/Admin/LogAdmin.php:406
+#: src/Admin/LogAdmin.php:422
 msgid "Select"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:384
+#: src/Admin/LogAdmin.php:386
 msgid "Select action"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1350
+#: src/Admin/LogAdmin.php:1352
 msgid "Select at least one failed message before applying bulk resend."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:424
+#: src/Admin/LogAdmin.php:426
 msgid "Select failed log entry #%d for resend"
 msgstr ""
 
@@ -1943,7 +1943,7 @@ msgstr ""
 msgid "Select the API region that matches the SparkPost account."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:800
+#: src/Admin/LogAdmin.php:802
 msgid "Selected provider"
 msgstr ""
 
@@ -1951,7 +1951,7 @@ msgstr ""
 msgid "Send a privacy-safe failure summary to your team."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:898
+#: src/Admin/LogAdmin.php:900
 msgid "Send a redacted delivery summary to the verified site admin address: %s."
 msgstr ""
 
@@ -2136,7 +2136,7 @@ msgstr ""
 msgid "Share of accepted attempts"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1469
+#: src/Admin/LogAdmin.php:1471
 msgid "Simulated"
 msgstr ""
 
@@ -2164,11 +2164,11 @@ msgstr ""
 msgid "Since %s UTC"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:933
+#: src/Admin/LogAdmin.php:935
 msgid "Size"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:801
+#: src/Admin/LogAdmin.php:803
 #: src/Admin/ProviderAdmin.php:515
 msgid "Source"
 msgstr ""
@@ -2179,10 +2179,10 @@ msgstr ""
 
 #: src/Admin/LogAdmin.php:306
 #: src/Admin/LogAdmin.php:325
-#: src/Admin/LogAdmin.php:406
-#: src/Admin/LogAdmin.php:436
-#: src/Admin/LogAdmin.php:465
-#: src/Admin/LogAdmin.php:799
+#: src/Admin/LogAdmin.php:408
+#: src/Admin/LogAdmin.php:438
+#: src/Admin/LogAdmin.php:467
+#: src/Admin/LogAdmin.php:801
 #: src/Admin/ProviderAdmin.php:208
 #: src/Admin/ProviderAdmin.php:215
 msgid "Status"
@@ -2224,11 +2224,11 @@ msgid "Switched to"
 msgstr ""
 
 #: src/Admin/LogAdmin.php:308
-#: src/Admin/LogAdmin.php:327
+#: src/Admin/LogAdmin.php:329
 msgid "Switchovers"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:440
+#: src/Admin/LogAdmin.php:442
 msgid "Switchovers: %d"
 msgstr ""
 
@@ -2264,7 +2264,7 @@ msgstr ""
 msgid "The Aculect Mail diagnostic report link has expired. Refresh the page and try again."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:649
+#: src/Admin/LogAdmin.php:651
 msgid "The Aculect Mail log export link has expired. Refresh the page and try again."
 msgstr ""
 
@@ -2292,11 +2292,11 @@ msgstr ""
 msgid "The highest-priority healthy provider is selected. Lower priority numbers are evaluated first."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1312
+#: src/Admin/LogAdmin.php:1314
 msgid "The message could not be moved to the front of the queue. Review scheduler health and the message detail."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1311
+#: src/Admin/LogAdmin.php:1313
 msgid "The message was moved to the front of the queue and will be processed shortly."
 msgstr ""
 
@@ -2308,27 +2308,27 @@ msgstr ""
 msgid "The queue is clear. New messages will appear here while they are waiting for delivery or retry."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:763
+#: src/Admin/LogAdmin.php:765
 msgid "The requested log entry was not found."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1379
+#: src/Admin/LogAdmin.php:1381
 msgid "The requested message could not be found for forwarding."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1330
+#: src/Admin/LogAdmin.php:1332
 msgid "The requested message could not be found for resend."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1331
+#: src/Admin/LogAdmin.php:1333
 msgid "The selected provider is not eligible for manual resend."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1087
+#: src/Admin/LogAdmin.php:1089
 msgid "Theme: %s"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1090
+#: src/Admin/LogAdmin.php:1092
 msgid "Theme: Unknown theme"
 msgstr ""
 
@@ -2348,7 +2348,7 @@ msgstr ""
 msgid "This can cause duplicate sends, unexpected transport changes, or confusing delivery results. Aculect Mail will not disable or reorder third-party code automatically."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:836
+#: src/Admin/LogAdmin.php:838
 msgid "This message cannot be resent because the stored safe payload is unavailable."
 msgstr ""
 
@@ -2360,7 +2360,7 @@ msgstr ""
 msgid "Throttle window (seconds)"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:489
+#: src/Admin/LogAdmin.php:491
 msgid "To"
 msgstr ""
 
@@ -2380,7 +2380,7 @@ msgstr ""
 
 #: src/Admin/ProviderCapabilityMatrix.php:44
 #: src/Admin/SetupWizard.php:156
-#: src/Admin/LogAdmin.php:1516
+#: src/Admin/LogAdmin.php:1518
 #: src/Admin/QueueDiagnosticsAdmin.php:122
 msgid "Unavailable"
 msgstr ""
@@ -2393,8 +2393,8 @@ msgstr ""
 msgid "Understand which provider handles each message and what happens if it fails."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1031
-#: src/Admin/LogAdmin.php:1472
+#: src/Admin/LogAdmin.php:1033
+#: src/Admin/LogAdmin.php:1474
 msgid "Unknown"
 msgstr ""
 
@@ -2402,8 +2402,8 @@ msgstr ""
 msgid "Unknown provider"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1062
-#: src/Admin/LogAdmin.php:1097
+#: src/Admin/LogAdmin.php:1064
+#: src/Admin/LogAdmin.php:1099
 msgid "Unknown source"
 msgstr ""
 
@@ -2411,7 +2411,7 @@ msgstr ""
 msgid "Update provider"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:808
+#: src/Admin/LogAdmin.php:810
 msgid "Updated"
 msgstr ""
 
@@ -2443,7 +2443,7 @@ msgstr ""
 msgid "Use any standard SMTP server with username and password credentials."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:854
+#: src/Admin/LogAdmin.php:856
 msgid "Use normal provider selection"
 msgstr ""
 
@@ -2483,7 +2483,7 @@ msgstr ""
 msgid "View diagnostics"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:434
+#: src/Admin/LogAdmin.php:436
 msgid "View log entry #%d details"
 msgstr ""
 
@@ -2499,7 +2499,7 @@ msgstr ""
 msgid "Waiting for delivery"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:328
+#: src/Admin/LogAdmin.php:330
 msgid "Waiting for first attempt"
 msgstr ""
 
@@ -2536,7 +2536,7 @@ msgstr ""
 msgid "WordPress"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:1094
+#: src/Admin/LogAdmin.php:1096
 msgid "WordPress core"
 msgstr ""
 
@@ -2568,7 +2568,7 @@ msgstr ""
 msgid "You do not have permission to download Aculect Mail diagnostics."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:640
+#: src/Admin/LogAdmin.php:642
 msgid "You do not have permission to export Aculect Mail logs."
 msgstr ""
 
@@ -2580,7 +2580,7 @@ msgstr ""
 msgid "You do not have permission to forward Aculect Mail log summaries."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:883
+#: src/Admin/LogAdmin.php:885
 msgid "You do not have permission to forward this log summary."
 msgstr ""
 
@@ -2600,7 +2600,7 @@ msgstr ""
 msgid "You do not have permission to resend Aculect Mail emails."
 msgstr ""
 
-#: src/Admin/LogAdmin.php:830
+#: src/Admin/LogAdmin.php:832
 msgid "You do not have permission to resend this message."
 msgstr ""
 
@@ -2640,7 +2640,7 @@ msgstr ""
 msgid "unknown"
 msgstr ""
 
-#: src/Admin/LogAdmin.php:982
+#: src/Admin/LogAdmin.php:984
 msgid "unknown domains"
 msgstr ""
 

@@ -8,6 +8,8 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ### Fixed
 
+- Rename the plugin entry file, translation template, and ZIP package to use Aculect Mail filenames.
+
 - Restore colored status pills in the Activity queue table.
 
 - Keep disabled notification fields and labels visibly muted after the shared field styles are applied.
@@ -59,7 +61,7 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 - Baseline contribution and coding standards documentation.
 - Changelog policy and feature documentation update protocol.
 - Product design contract for admin UI, docs, and launch-asset decisions.
-- Translation template generation workflow and baseline `languages/onesmtp.pot` release artifact.
+- Translation template generation workflow and baseline `languages/aculect-mail.pot` release artifact.
 - Minimal admin menu and settings shell for providers, logs, diagnostics, and settings entry points.
 - Retry scheduler health detection with an admin notice when Action Scheduler is unavailable.
 - REST route schemas and strict request validation for provider and message operations.

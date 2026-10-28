@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__, 2);
 $domain = 'onesmtp';
-$output = $root . '/languages/onesmtp.pot';
+$output = $root . '/languages/aculect-mail.pot';
 $functions = [
     '__',
     '_e',

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PLUGIN_SLUG="onesmtp"
+PLUGIN_SLUG="aculect-mail"
 OUTPUT_DIR="${1:-dist}"
 
 if [[ ! -f "build/index.js" || ! -f "build/index.asset.php" || ! -f "build/dataviews.css" ]]; then
@@ -62,6 +62,8 @@ shasum -a 256 -c "$CHECKSUM_PATH"
 ENTRY_MANIFEST="$STAGING_DIR/package-entries.txt"
 unzip -Z1 "$ZIP_PATH" > "$ENTRY_MANIFEST"
 
+grep -qx "$PLUGIN_SLUG/aculect-mail.php" "$ENTRY_MANIFEST"
+grep -qx "$PLUGIN_SLUG/languages/aculect-mail.pot" "$ENTRY_MANIFEST"
 grep -qx "$PLUGIN_SLUG/build/index.js" "$ENTRY_MANIFEST"
 grep -qx "$PLUGIN_SLUG/build/index.asset.php" "$ENTRY_MANIFEST"
 grep -qx "$PLUGIN_SLUG/build/dataviews.css" "$ENTRY_MANIFEST"
