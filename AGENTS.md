@@ -8,11 +8,10 @@ Guidance for AI coding agents working in the OneSMTP plugin repository.
   - PHP 8.1+ WordPress plugin under `OneSMTP\\`
   - PHPUnit, PHPCS/WPCS, PHPStan
   - Minimal Node-based build tooling for packaging and future assets
-- Current remote branch layout:
+- Branch roles:
   - `main` is production release space only
   - `develop` is the development integration branch
-  - `release/0.1.0` is the active milestone stabilization branch
-  - Re-verify live Git and GitHub state before assuming any future `release/*` branch exists
+  - `release/<milestone-number>` is a milestone stabilization branch only when the assigned milestone and live GitHub state confirm it
 
 ## Branch And PR Workflow
 - Rehydrate branch state before changes:
@@ -23,8 +22,7 @@ Guidance for AI coding agents working in the OneSMTP plugin repository.
   - issue work: `issue/<issue-number>-<short-slug>`
   - docs/workflow updates: `docs/<short-slug>`
 - Never rely on GitHub's default PR base. Set the base branch explicitly when opening every PR.
-- Target 0.1.0 milestone work to `release/0.1.0`.
-- Target every milestone-assigned issue or PR to its specific `release/<milestone-number>` branch.
+- For milestone-assigned work, verify the issue milestone, matching remote `release/<milestone-number>` branch, and bases of related open PRs before creating a branch or PR. Do not reuse a previous milestone's branch by default.
 - Use `develop` only for unmilestoned development integration or as the verified source for creating a missing milestone branch when repo policy supports it.
 - Do not open implementation PRs against `main`.
 - When a new milestone stabilization branch is needed, name it `release/<milestone-number>` and create it from the verified development base before opening milestone work.
